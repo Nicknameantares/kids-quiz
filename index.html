@@ -2555,6 +2555,77 @@ canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; 
 .ph-btn.idle { background: #1d2550; color: var(--muted); }
 .ph-btn:disabled { cursor: default; }
 
+/* Landing: a scrolling page in the same Great Hall palette, shown before the game */
+body.on-landing { overflow: auto; }
+.landing { max-width: 1180px; margin-inline: auto; padding-inline: clamp(16px, 4vw, 48px); padding-block: 20px 56px; display: grid; gap: clamp(48px, 9vh, 96px); }
+.l-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.l-logo { font: 400 22px/1 var(--display); color: var(--gold); }
+.l-who { font-weight: 800; color: var(--muted); font-size: 15px; }
+.l-who b { color: var(--parchment); }
+.l-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
+.l-eyebrow { margin: 0 0 14px; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+.l-title { font: 400 clamp(44px, 7vw, 96px)/.98 var(--display); color: var(--gold); margin: 0; text-wrap: balance; text-shadow: 0 0 40px rgba(231,192,104,.3); }
+.l-lead { font: 600 clamp(17px, 1.6vw, 21px)/1.55 var(--body); max-width: 34em; margin: 22px 0 0; color: #dcd3bd; }
+.l-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.btn.big { font-size: clamp(16px, 1.3vw, 20px); padding: .85em 1.6em; text-decoration: none; display: inline-block; }
+.l-board { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transform: rotate(-3deg); padding: 18px; border-radius: 18px; background: rgba(13,21,48,.6); box-shadow: 0 0 0 2px rgba(231,192,104,.25), 0 30px 60px rgba(0,0,0,.45); }
+.l-cat { font: 400 clamp(12px, 1.2vw, 17px)/1.1 var(--display); color: var(--gold); text-align: center; padding: 6px 2px 8px; border-bottom: 2px solid var(--gold-soft); }
+.l-tile { aspect-ratio: 16 / 10; border-radius: 8px; background: linear-gradient(180deg, var(--tile-hi), var(--tile)); display: grid; place-items: center; font: 900 clamp(18px, 2.4vw, 34px)/1 var(--body); color: var(--gold); border: 1px solid rgba(231,192,104,.25); }
+.l-tile.done { background: rgba(22,34,74,.45); border-style: dashed; }
+.l-tile.open { background: var(--parchment); color: #7a1d2a; font-family: var(--display); box-shadow: 0 0 0 3px var(--gold), 0 0 30px rgba(231,192,104,.6); animation: pulse 1.6s ease-in-out infinite; }
+.l-phone { position: absolute; right: -18px; bottom: -34px; width: 92px; aspect-ratio: 9 / 17; border-radius: 16px; background: #10172f; border: 3px solid #3a4677; display: grid; place-items: center; transform: rotate(9deg); box-shadow: 0 16px 30px rgba(0,0,0,.5); }
+.l-phone span { width: 74%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 900 16px/1 var(--body); color: var(--ink); background: radial-gradient(circle at 50% 40%, #f6d98c, var(--gold) 60%, #b8862e); box-shadow: 0 0 22px rgba(231,192,104,.7); }
+.l-section { display: grid; gap: 20px; }
+.l-h2 { font: 400 clamp(30px, 3.6vw, 48px)/1.05 var(--display); color: var(--gold); margin: 0; }
+.l-sub { margin: 0; color: #cfc6b0; font-weight: 600; font-size: 17px; line-height: 1.55; max-width: 46em; }
+.l-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; counter-reset: step; }
+.l-steps li { counter-increment: step; background: var(--hall); border-radius: 14px; padding: 20px; color: #cfc6b0; font-weight: 600; line-height: 1.5; display: grid; gap: 8px; align-content: start; }
+.l-steps li::before { content: counter(step); font: 400 34px/1 var(--display); color: var(--gold); }
+.l-steps b { color: var(--parchment); font-size: 19px; font-weight: 900; }
+.l-login { background: var(--parchment); color: var(--ink); border-radius: 20px; padding: clamp(20px, 4vw, 44px); box-shadow: 0 0 0 5px var(--gold-soft); }
+.l-login .l-h2 { color: #7a1d2a; }
+#loginBox { display: grid; gap: 16px; }
+.l-form { display: grid; gap: 16px; max-width: 640px; }
+.l-form label { display: grid; gap: 6px; font-weight: 900; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: #7a5a22; }
+.l-form input { font: 800 20px/1.2 var(--body); padding: .55em .7em; border-radius: 10px; border: 2px solid #c9b27c; background: #fbf5e6; color: var(--ink); min-width: 0; }
+.l-form input:focus-visible { outline: 3px solid var(--gold-soft); outline-offset: 1px; }
+.l-names { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); gap: 10px; }
+.l-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.l-login .btn { color: var(--ink); border-color: #a58a4f; }
+.l-login .btn.solid { background: #7a1d2a; border-color: #7a1d2a; color: var(--parchment); }
+.l-teams { display: flex; gap: 10px; flex-wrap: wrap; }
+.l-team { font: 800 17px/1.25 var(--body); text-align: left; background: #fbf5e6; border: 2px solid #c9b27c; border-radius: 12px; padding: .7em 1em; cursor: pointer; color: var(--ink); }
+.l-team small { display: block; color: #8a7550; font-weight: 700; font-size: 14px; }
+.l-team:hover { border-color: #7a1d2a; }
+.l-me { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-size: 18px; font-weight: 700; }
+.l-me b { font: 400 30px/1.1 var(--display); color: #7a1d2a; }
+.l-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.l-chip { display: inline-flex; align-items: center; gap: 6px; background: #fbf5e6; border: 1px solid #c9b27c; border-radius: 999px; padding: .3em .8em; font-weight: 800; }
+.l-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--house); }
+.l-note { color: #8a7550; font-weight: 700; font-size: 14px; margin: 0; }
+.l-rounds { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px; }
+.l-round { text-align: left; background: var(--hall); border: 2px solid rgba(231,192,104,.2); border-radius: 16px; padding: 18px; color: var(--parchment); cursor: pointer; display: grid; gap: 10px; align-content: start; font-family: var(--body); position: relative; }
+.l-round:hover { border-color: var(--gold-soft); }
+.l-round[aria-pressed="true"] { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 0 30px rgba(231,192,104,.25); background: linear-gradient(180deg, #22336f, var(--hall)); }
+.l-round .num { font: 400 15px/1 var(--display); color: var(--muted); }
+.l-round[aria-pressed="true"] .num { color: var(--gold); }
+.l-round h3 { margin: 0; font: 400 22px/1.15 var(--display); color: var(--gold); text-wrap: balance; }
+.l-round p { margin: 0; color: #cfc6b0; font-weight: 600; font-size: 14px; line-height: 1.45; }
+.l-round .meta2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--muted); }
+.l-dots { display: inline-flex; gap: 3px; }
+.l-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(143,156,196,.35); }
+.l-dots i.on { background: var(--gold); }
+.l-played { font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: #5ad17a; }
+.l-check { position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; font: 900 15px/1 var(--body); color: var(--ink); }
+.l-round[aria-pressed="true"] .l-check { background: var(--gold); border-color: var(--gold); }
+.l-start { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.l-start p { margin: 0; color: #cfc6b0; font-weight: 700; }
+.l-foot { color: var(--muted); font-size: 14px; font-weight: 600; text-align: center; }
+@media (max-width: 760px) {
+  .l-hero { grid-template-columns: 1fr; }
+  .l-board { max-width: 360px; margin: 10px auto 30px; }
+}
+
 @media (max-width: 640px) {
   body { overflow: auto; }
   .app { height: auto; min-height: 100%; }
@@ -2569,10 +2640,62 @@ canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; 
 </style></head><body>
 
 <canvas id="stars" aria-hidden="true"></canvas>
-<div class="app">
+<div class="landing" id="landing" hidden>
+  <nav class="l-nav">
+    <span class="l-logo">Своя игра: Хогвартс</span>
+    <span class="l-who" id="lWho"></span>
+  </nav>
+
+  <section class="l-hero">
+    <div class="l-hero-text">
+      <p class="l-eyebrow">Семейная викторина по миру Гарри Поттера</p>
+      <h1 class="l-title">Своя игра: Хогвартс</h1>
+      <p class="l-lead">Табло с вопросами на большом телевизоре, кнопки на телефонах у детей и полчаса волшебства в гостиной. Кто первый нажал, тот и отвечает, а в конце призы получают все.</p>
+      <div class="l-cta">
+        <button class="btn solid big" type="button" id="lPlay">Играть</button>
+        <a class="btn big" href="#how">Как это устроено</a>
+      </div>
+    </div>
+    <div class="l-board" aria-hidden="true">
+      <div class="l-cat">Заклинания</div><div class="l-cat">Существа</div><div class="l-cat">Квиддич</div>
+      <div class="l-tile">100</div><div class="l-tile">100</div><div class="l-tile done"></div>
+      <div class="l-tile">200</div><div class="l-tile open">?</div><div class="l-tile">200</div>
+      <div class="l-tile done"></div><div class="l-tile">300</div><div class="l-tile">300</div>
+      <div class="l-tile">400</div><div class="l-tile">400</div><div class="l-tile">400</div>
+      <div class="l-phone"><span>ЖМИ!</span></div>
+    </div>
+  </section>
+
+  <section class="l-section" id="how">
+    <h2 class="l-h2">Как это устроено</h2>
+    <ol class="l-steps">
+      <li><b>Выведите игру на телевизор</b>Откройте сайт на ноутбуке и включите полный экран. Табло, вопросы и счёт видны всей комнате.</li>
+      <li><b>Раздайте кнопки</b>Дети наводят телефон на QR-код и выбирают своё имя. Ни приложений, ни аккаунтов не нужно.</li>
+      <li><b>Играйте</b>Ведущий открывает вопрос, кнопки загораются. Кто нажал первым, отвечает вслух, ведущий начисляет очки.</li>
+      <li><b>Соберите турнир</b>Несколько раундов подряд, каждый следующий дороже. Очки копятся, а в конце объявляется победитель.</li>
+    </ol>
+  </section>
+
+  <section class="l-section l-login" id="login">
+    <h2 class="l-h2">Вход для команды</h2>
+    <div id="loginBox"></div>
+  </section>
+
+  <section class="l-section" id="rounds">
+    <h2 class="l-h2">Выберите раунды</h2>
+    <p class="l-sub">Пять раундов по 25 вопросов. Отметьте те, что хотите сыграть: они пойдут по порядку, и в каждом следующем вопросы стоят дороже. Один раунд занимает примерно 30 минут.</p>
+    <div class="l-rounds" id="roundCards"></div>
+    <div class="l-start" id="startBox"></div>
+  </section>
+
+  <footer class="l-foot">Сделано для семейных вечеров. Все вопросы по книгам о Гарри Поттере, ответы проверяет ведущий.</footer>
+</div>
+
+<div class="app" hidden>
   <header>
     <h1>Своя игра: Хогвартс<small id="roundLabel">Викторина по Гарри Поттеру</small></h1>
     <div class="tools">
+      <button class="btn" id="menu" type="button">Меню</button>
       <button class="btn sound" id="music" type="button" aria-pressed="true">Музыка: вкл</button>
       <button class="btn sound" id="sfx" type="button" aria-pressed="true">Звуки: вкл</button>
       <button class="btn" id="phonesBtn" type="button" hidden>Кнопки на телефонах</button>
@@ -2600,10 +2723,49 @@ canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; 
 <main class="phone" id="phone" hidden aria-live="polite"></main>
 
 <script>
-// A tournament is a list of rounds played by the same players; round 2 doubles the prices.
+// The five rounds a team can pick from for a tournament
 const BASE_PRICES = [100, 200, 300, 400, 500];
-const ROUNDS = [
-  { id: "hp-2", title: "Раунд 1", mult: 1, cats: [
+const POOL = [
+  { id: "hp-1", name: "Первые шаги", level: 1,
+    blurb: "Хогвартс, первые заклинания, волшебные существа, герои и квиддич", cats: [
+    { title: "Хогвартс", qs: [
+      ["Какое животное изображено на гербе Гриффиндора?", "Лев"],
+      ["Кто решает, на какой факультет попадёт новый ученик?", "Распределяющая шляпа"],
+      ["С какой платформы вокзала Кингс-Кросс уходит Хогвартс-экспресс?", "Платформа 9 и ¾"],
+      ["Как зовут привидение Гриффиндора, у которого голова держится на кусочке кожи?", "Почти Безголовый Ник"],
+      ["Как называется комната в Хогвартсе, которая появляется, только когда она очень нужна?", "Выручай-комната"]
+    ]},
+    { title: "Заклинания", qs: [
+      ["Каким заклинанием зажигают свет на кончике волшебной палочки?", "«Люмос!»"],
+      ["Каким заклинанием Гермиона и Рон заставили перо подняться в воздух?", "«Вингардиум Левиоса!»"],
+      ["Каким заклинанием открывают запертые двери?", "«Алохомора!»"],
+      ["Каким заклинанием Гарри выбивает палочку из рук противника?", "«Экспеллиармус!»"],
+      ["Каким заклинанием вызывают Патронуса и какое животное у Гарри?", "«Экспекто Патронум!» Патронус Гарри — олень"]
+    ]},
+    { title: "Волшебные существа", qs: [
+      ["Как зовут белую сову Гарри?", "Букля"],
+      ["Как зовут домового эльфа, который получил свободу благодаря носку?", "Добби"],
+      ["Как зовут огромного трёхголового пса, который охранял философский камень?", "Пушок"],
+      ["Какие существа охраняют тюрьму Азкабан и высасывают из людей радость?", "Дементоры"],
+      ["Как зовут гиппогрифа, которого Гарри и Гермиона спасли в третьей книге?", "Клювокрыл"]
+    ]},
+    { title: "Герои", qs: [
+      ["Как зовут рыжего лучшего друга Гарри?", "Рон Уизли"],
+      ["Как зовут директора Хогвартса с длинной серебряной бородой?", "Альбус Дамблдор"],
+      ["Какой формы шрам на лбу у Гарри?", "В форме молнии"],
+      ["Как зовут рыжего кота Гермионы?", "Живоглот"],
+      ["Как зовут крёстного отца Гарри?", "Сириус Блэк"]
+    ]},
+    { title: "Квиддич и волшебные вещи", qs: [
+      ["На чём летают игроки в квиддич?", "На мётлах"],
+      ["Как называется маленький золотой крылатый мячик, который ловит ловец?", "Золотой снитч"],
+      ["Какие волшебные конфеты могут оказаться со вкусом ушной серы или травы?", "Драже «Берти Боттс» на любой вкус"],
+      ["Какой подарок, делающий невидимым, Гарри получил на первое Рождество в Хогвартсе?", "Мантия-невидимка"],
+      ["Как называется зеркало, которое показывает самое заветное желание?", "Зеркало Еиналеж"]
+    ]}
+  ]},
+  { id: "hp-2", name: "Тайны Хогвартса", level: 2,
+    blurb: "Тайные места замка, уроки и зелья, семья Уизли, волшебный мир и злодеи", cats: [
     { title: "Тайны Хогвартса", qs: [
       ["Как зовут кошку завхоза Филча?", "Миссис Норрис"],
       ["Какой предмет вёл профессор Снегг в первых книгах?", "Зельеварение"],
@@ -2640,7 +2802,8 @@ const ROUNDS = [
       ["Какое чудовище жило в Тайной комнате?", "Василиск, огромный змей"]
     ]}
   ]},
-  { id: "hp-r2", title: "Раунд 2", mult: 2, cats: [
+  { id: "hp-r2", name: "Квиддич и профессора", level: 2,
+    blurb: "Квиддич, звери и питомцы, профессора, всё о Гарри и волшебные предметы", cats: [
     { title: "Квиддич", qs: [
       ["Сколько игроков в одной команде по квиддичу?", "Семь"],
       ["Как называется красный мяч, который забрасывают в кольца?", "Квоффл"],
@@ -2676,54 +2839,174 @@ const ROUNDS = [
       ["Что делает Кубок огня в четвёртой книге?", "Выбирает участников Турнира трёх волшебников"],
       ["Как называется каменная чаша, в которой можно смотреть чужие воспоминания?", "Омут памяти"]
     ]}
+  ]},
+  { id: "hp-r4", name: "Турнир трёх волшебников", level: 3,
+    blurb: "Кубок огня, гости из других школ, праздники, хитрые заклинания и цифры", cats: [
+    { title: "Турнир трёх волшебников", qs: [
+      ["Сколько школ участвовало в Турнире трёх волшебников?", "Три: Хогвартс, Шармбатон и Дурмстранг"],
+      ["Как звали чемпиона Хогвартса, которого Кубок огня выбрал до Гарри?", "Седрик Диггори"],
+      ["С кем Гарри сражался в первом испытании?", "С драконом, венгерской хвосторогой"],
+      ["Кого нужно было спасти со дна озера во втором испытании?", "Близкого друга, для Гарри это был Рон"],
+      ["Каким было третье, последнее испытание турнира?", "Огромный лабиринт с ловушками"]
+    ]},
+    { title: "Гости из других школ", qs: [
+      ["Как зовут знаменитого болгарского ловца, чемпиона Дурмстранга?", "Виктор Крам"],
+      ["Как зовут очень высокую директрису Шармбатона?", "Мадам Максим"],
+      ["Как зовут чемпионку Шармбатона?", "Флёр Делакур"],
+      ["На чём ученики Дурмстранга прибыли в Хогвартс?", "На корабле, который всплыл из озера"],
+      ["На чём прилетели ученики Шармбатона?", "В огромной голубой карете, которую везли крылатые кони"]
+    ]},
+    { title: "Праздники и сладости", qs: [
+      ["Какие шоколадные сладости умеют прыгать?", "Шоколадные лягушки"],
+      ["Кто каждое Рождество дарил Гарри вязаный свитер?", "Миссис Уизли"],
+      ["Какой праздник празднуют 31 октября пиром с тыквами?", "Хэллоуин"],
+      ["Как назывался рождественский бал в четвёртой книге?", "Святочный бал"],
+      ["С кем Гермиона пошла на Святочный бал?", "С Виктором Крамом"]
+    ]},
+    { title: "Хитрые заклинания", qs: [
+      ["Каким заклинанием гасят свет на кончике палочки?", "«Нокс!»"],
+      ["Каким заклинанием чинят разбитые вещи, например очки?", "«Репаро!»"],
+      ["Каким заклинанием подзывают к себе нужную вещь?", "«Акцио!»"],
+      ["Какое заклинание сковывает человека, и он падает как бревно?", "«Петрификус Тоталус!»"],
+      ["Каким заклинанием стирают память?", "«Обливиэйт!»"]
+    ]},
+    { title: "Числа и цвета", qs: [
+      ["Сколько всего книг о Гарри Поттере?", "Семь"],
+      ["Какого цвета паровоз Хогвартс-экспресса?", "Алого, ярко-красного"],
+      ["Сколько лет было Гарри, когда он узнал, что он волшебник?", "Одиннадцать"],
+      ["Под каким номером стоит дом Дурслей на Тисовой улице?", "Номер 4"],
+      ["Сколько братьев у Рона Уизли?", "Пятеро: Билл, Чарли, Перси, Фред и Джордж"]
+    ]}
+  ]},
+  { id: "hp-r5", name: "Знаток Хогвартса", level: 3,
+    blurb: "Самый трудный: основатели, привидения, родственники, министерство и последние книги", cats: [
+    { title: "Основатели", qs: [
+      ["Сколько волшебников основали Хогвартс?", "Четверо"],
+      ["Какое животное на гербе Пуффендуя?", "Барсук"],
+      ["Кто основал факультет со змеёй на гербе?", "Салазар Слизерин"],
+      ["Какой меч Гарри достал из Распределяющей шляпы?", "Меч Годрика Гриффиндора"],
+      ["Какая птица на гербе Когтеврана?", "Орёл (в фильмах ворон)"]
+    ]},
+    { title: "Привидения", qs: [
+      ["Как зовут полтергейста, который вечно хулиганит в Хогвартсе?", "Пивз"],
+      ["Как зовут плачущее привидение из туалета для девочек?", "Плакса Миртл"],
+      ["Как зовут привидение Слизерина?", "Кровавый Барон"],
+      ["Как зовут доброе привидение Пуффендуя?", "Толстый Монах"],
+      ["Какой профессор-привидение ведёт урок, и какой это предмет?", "Профессор Биннс, история магии"]
+    ]},
+    { title: "Родственники", qs: [
+      ["Как зовут дядю Гарри?", "Вернон Дурсль"],
+      ["Как зовут тётю Гарри?", "Петуния Дурсль"],
+      ["Как зовут отца Драко Малфоя?", "Люциус Малфой"],
+      ["Какой брат Рона работает с драконами в Румынии?", "Чарли"],
+      ["Как зовут ворчливого домового эльфа семьи Блэков?", "Кикимер"]
+    ]},
+    { title: "Министерство магии", qs: [
+      ["Как называется тюрьма для волшебников?", "Азкабан"],
+      ["Как называется главная газета волшебников?", "«Ежедневный пророк»"],
+      ["Как звали министра магии в первых книгах?", "Корнелиус Фадж"],
+      ["В каком отделе министерства работал мистер Уизли?", "В отделе неправильного использования магловских предметов"],
+      ["Как гости попадают в Министерство магии?", "Через красную телефонную будку"]
+    ]},
+    { title: "Последние книги", qs: [
+      ["Как назывался тайный отряд учеников, который собрал Гарри?", "Отряд Дамблдора"],
+      ["Как называется союз волшебников, который Дамблдор собрал против Волан-де-Морта?", "Орден Феникса"],
+      ["Как называются предметы, в которых Волан-де-Морт спрятал части души?", "Крестражи"],
+      ["Как зовут младшего сына Гарри, названного в честь двух директоров?", "Альбус Северус"],
+      ["Какие три предмета называются Дарами Смерти?", "Бузинная палочка, Воскрешающий камень и Мантия-невидимка"]
+    ]}
   ]}
 
 ];
-let QUIZ = ROUNDS[0].cats, PRICES = BASE_PRICES;
+let ROUNDS = [], QUIZ = [], PRICES = BASE_PRICES;
+const POOL_BY = Object.fromEntries(POOL.map(R => [R.id, R]));
+// A tournament plays the chosen rounds in order; round k multiplies the prices by k
 function applyRound() {
+  ROUNDS = S.rounds.map((id, k) => ({ id, title: "Раунд " + (k + 1), name: POOL_BY[id].name, mult: k + 1, cats: POOL_BY[id].cats }));
   const R = ROUNDS[S.round] || ROUNDS[0];
   QUIZ = R.cats; PRICES = BASE_PRICES.map(p => p * R.mult);
 }
 
 const KEY = "hp-svoya-igra-v1";
+const PKEY = "hp-svoya-igra-profiles";
 const IS_BUZZER = /^#buzz-/.test(location.hash);
-let S = load();
-
 const HOUSES = ["#b3263a", "#2f6fd1", "#2f8a4f", "#c98a12", "#7a4fc2", "#1c8c93", "#c2457f", "#8a6a3a"];
 const MAX_PLAYERS = 8;
 
+function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function fetchJSON(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+function newId() { return Math.random().toString(36).slice(2, 9); }
+
+// Teams ("login"): each team keeps its players, its own saved game and the rounds it has played.
+// Everything lives in this browser, so no passwords or accounts are needed.
+let P = fetchJSON(PKEY);
+if (!P || !Array.isArray(P.list)) {
+  P = { list: [], current: null };
+  const legacy = fetchJSON(KEY); // a game saved before teams existed becomes the first team
+  if (legacy && Array.isArray(legacy.players)) {
+    const id = newId();
+    P.list.push({ id, team: "Наша семья", players: legacy.players.map(p => p.name || ""), played: ["hp-1"], sel: ["hp-2", "hp-r2"] });
+    P.current = id;
+    store(KEY + ":" + id, legacy);
+  }
+  store(PKEY, P);
+}
+function profile() { return P.list.find(x => x.id === P.current) || null; }
+function saveProfiles() { store(PKEY, P); }
+function gameKey() { return KEY + ":" + (P.current || "guest"); }
+function defaultSelection() {
+  const pr = profile(), played = pr ? pr.played : [];
+  const fresh = POOL.map(R => R.id).filter(id => !played.includes(id));
+  return (fresh.length ? fresh : POOL.map(R => R.id)).slice(0, 2);
+}
+let selGuest = null;
+function selection() {
+  const pr = profile(), sel = pr ? pr.sel : selGuest;
+  return Array.isArray(sel) ? sel.filter(id => POOL_BY[id]) : defaultSelection();
+}
+
+let S = null;
 function randomDouble() { return Math.floor(Math.random() * 5) + "-" + (1 + Math.floor(Math.random() * 4)); }
 // A new tournament keeps the names; `past` holds each player's score in the finished rounds
-function fresh() {
-  const players = S ? S.players.map(p => ({ name: p.name, score: 0, past: [] })) : [{ name: "Игрок 1", score: 0, past: [] }, { name: "Игрок 2", score: 0, past: [] }];
-  return { players, used: {}, dbl: randomDouble(), round: 0 };
+function fresh(rounds) {
+  const pr = profile();
+  const names = S ? S.players.map(p => p.name) : pr && pr.players.length ? pr.players : ["Игрок 1", "Игрок 2"];
+  return { players: names.map(n => ({ name: n, score: 0, past: [] })), used: {}, dbl: randomDouble(), round: 0, rounds: (rounds && rounds.length ? rounds : null) || (S && S.rounds) || defaultSelection() };
+}
+function migrate(s) {
+  if (!s || !Array.isArray(s.players)) return null;
+  // Saves from before tournaments: a board of the old "hp-2" set becomes round 1, anything older starts clean
+  if (!Number.isInteger(s.round)) {
+    if (s.qset !== "hp-2") { s.players.forEach(p => { p.score = 0; }); s.used = {}; s.dbl = randomDouble(); }
+    s.round = 0; delete s.qset;
+  }
+  if (!Array.isArray(s.rounds)) s.rounds = ["hp-2", "hp-r2"];
+  s.rounds = s.rounds.filter(id => POOL_BY[id]);
+  if (!s.rounds.length) s.rounds = selection();
+  if (s.round >= s.rounds.length) s.round = s.rounds.length - 1;
+  s.players.forEach(p => { if (!Array.isArray(p.past)) p.past = []; if (typeof p.score !== "number") p.score = 0; });
+  if (!s.used) s.used = {};
+  return s;
+}
+function loadGame() { S = null; S = migrate(fetchJSON(gameKey())) || fresh(); applyRound(); }
+function save() {
+  store(gameKey(), S);
+  const pr = profile();
+  if (pr) { pr.players = S.players.map(p => p.name); saveProfiles(); }
+}
+function markPlayed() {
+  const pr = profile(), id = S.rounds[S.round];
+  if (pr && id && !pr.played.includes(id)) { pr.played.push(id); saveProfiles(); }
 }
 function nextRound() {
+  markPlayed();
   S.players.forEach(p => { p.past = (p.past || []).slice(0, S.round); while (p.past.length < S.round) p.past.push(0); p.past.push(p.score); p.score = 0; });
   S.round++; S.used = {}; S.dbl = randomDouble();
   save(); applyRound(); renderAll();
 }
 function total(p) { return (p.past || []).reduce((a, b) => a + b, 0) + p.score; }
-function load() {
-  try {
-    const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && s.players) {
-      // Saves from before tournaments: a board of the old "hp-2" set becomes round 1, anything older starts clean
-      if (!Number.isInteger(s.round)) {
-        if (s.qset !== "hp-2") { s.players.forEach(p => { p.score = 0; }); s.used = {}; s.dbl = randomDouble(); }
-        s.round = 0; delete s.qset;
-      }
-      if (s.round >= ROUNDS.length) s.round = ROUNDS.length - 1;
-      s.players.forEach(p => { if (!Array.isArray(p.past)) p.past = []; });
-      return s;
-    }
-    if (s && s.scores) return { players: s.names.map((n, i) => ({ name: n, score: s.scores[i] })), used: s.used, dbl: s.dbl };
-  } catch (e) {}
-  return null;
-}
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
-if (!S) S = fresh();
-applyRound();
+function inProgress() { return S.round > 0 || Object.keys(S.used).length > 0 || S.players.some(p => p.score); }
+loadGame();
 
 const $ = id => document.getElementById(id);
 const board = $("board"), overlay = $("overlay"), card = $("card");
@@ -2786,7 +3069,7 @@ function renderScores() {
     if (el) el.textContent = p.score;
     if (t) { t.hidden = S.round === 0; t.textContent = "в турнире " + total(p); }
   });
-  $("roundLabel").textContent = ROUNDS[S.round].title + " из " + ROUNDS.length + (ROUNDS[S.round].mult > 1 ? " · очки ×" + ROUNDS[S.round].mult : "") + " · Викторина по Гарри Поттеру";
+  $("roundLabel").textContent = ROUNDS[S.round].title + " из " + ROUNDS.length + " · " + ROUNDS[S.round].name + (ROUNDS[S.round].mult > 1 ? " · очки ×" + ROUNDS[S.round].mult : "");
   $("left").textContent = 25 - Object.keys(S.used).length;
 }
 function esc(t) { return t.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
@@ -2879,6 +3162,7 @@ function standings() {
     '</tbody></table></div>';
 }
 function showFinal() {
+  if (Object.keys(S.used).length === 25) markPlayed();
   const last = S.round >= ROUNDS.length - 1;
   const head = last
     ? (ROUNDS.length > 1 ? leaderText(S.players.map(total), "Кубок турнира") : leaderText(S.players.map(p => p.score), "Кубок школы"))
@@ -3167,6 +3451,123 @@ if (IS_BUZZER) {
   setInterval(() => { hostPublish(); renderLinked(); renderBuzz(); }, 8000);
 })();
 
+// ---------- Landing page: description, team login and round picker ----------
+const LEVELS = ["", "Лёгкий", "Средний", "Трудный"];
+function showScreen() {
+  if (IS_BUZZER) return;
+  const play = location.hash === "#play" && !!profile();
+  $("landing").hidden = play;
+  document.querySelector(".app").hidden = !play;
+  document.body.classList.toggle("on-landing", !play);
+  if (play) renderAll(); else { close(); renderLanding(); }
+}
+function goPlay() { if (location.hash === "#play") showScreen(); else location.hash = "#play"; }
+function renderLanding() {
+  const pr = profile();
+  $("lWho").innerHTML = pr ? "Команда: <b>" + esc(pr.team) + "</b>" : "Вы ещё не вошли";
+  renderLogin(); renderRounds();
+}
+function renderLogin() {
+  const box = $("loginBox"), pr = profile();
+  if (pr) {
+    box.innerHTML =
+      '<div class="l-me"><b>' + esc(pr.team) + '</b><div class="l-chips">' +
+        S.players.map((p, i) => '<span class="l-chip" style="--house:' + house(i) + '"><i></i>' + esc(name(i)) + '</span>').join("") + '</div></div>' +
+      '<p class="l-note">Имена можно поменять прямо на табло. Счёт и пройденные раунды сохраняются за командой на этом устройстве.</p>' +
+      '<div class="l-row"><button class="btn" type="button" id="logout">Сменить команду</button></div>';
+    $("logout").addEventListener("click", () => { P.current = null; saveProfiles(); loadGame(); renderLanding(); });
+    return;
+  }
+  const others = P.list;
+  box.innerHTML =
+    (others.length ? '<p class="l-note">Уже играли? Выберите свою команду:</p><div class="l-teams">' +
+      others.map(t => '<button class="l-team" type="button" data-team="' + esc(t.id) + '">' + esc(t.team) + '<small>' + esc(t.players.filter(Boolean).join(", ") || "без имён") + '</small></button>').join("") +
+      '</div><p class="l-note">Или создайте новую:</p>' : '<p class="l-note">Придумайте название команды и впишите игроков. Пароль не нужен.</p>') +
+    '<form class="l-form" id="lForm" novalidate>' +
+      '<label for="lTeam">Название команды<input id="lTeam" maxlength="30" placeholder="Например, Семья Уизли" autocomplete="off"></label>' +
+      '<label>Игроки<div class="l-names" id="lNames">' +
+        '<input id="lName0" maxlength="18" placeholder="Имя игрока 1" aria-label="Имя игрока 1" autocomplete="off">' +
+        '<input id="lName1" maxlength="18" placeholder="Имя игрока 2" aria-label="Имя игрока 2" autocomplete="off">' +
+      '</div></label>' +
+      '<div class="l-row"><button class="btn" type="button" id="lMore">+ Ещё игрок</button><button class="btn solid" type="submit">Войти</button></div>' +
+      '<p class="l-note" id="lErr" hidden></p>' +
+    '</form>';
+  box.querySelectorAll("[data-team]").forEach(b => b.addEventListener("click", () => {
+    P.current = b.dataset.team; saveProfiles(); loadGame(); renderLanding(); Sound.fx.pop();
+    $("rounds").scrollIntoView({ behavior: "smooth" });
+  }));
+  $("lMore").addEventListener("click", () => {
+    const n = $("lNames").children.length;
+    if (n >= MAX_PLAYERS) return;
+    const inp = document.createElement("input");
+    inp.id = "lName" + n; inp.maxLength = 18; inp.placeholder = "Имя игрока " + (n + 1); inp.setAttribute("aria-label", "Имя игрока " + (n + 1)); inp.autocomplete = "off";
+    $("lNames").appendChild(inp); inp.focus();
+    if (n + 1 >= MAX_PLAYERS) $("lMore").hidden = true;
+  });
+  $("lForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const team = $("lTeam").value.trim();
+    const names = [...$("lNames").children].map(i => i.value.trim()).filter(Boolean);
+    const err = $("lErr");
+    if (!team) { err.hidden = false; err.textContent = "Впишите название команды."; $("lTeam").focus(); return; }
+    if (!names.length) { err.hidden = false; err.textContent = "Впишите хотя бы одного игрока."; $("lName0").focus(); return; }
+    const id = newId();
+    P.list.push({ id, team, players: names, played: [], sel: null });
+    P.current = id; saveProfiles(); loadGame(); save(); renderLanding(); Sound.fx.newGame();
+    $("rounds").scrollIntoView({ behavior: "smooth" });
+  });
+}
+function renderRounds() {
+  const pr = profile(), sel = selection();
+  $("roundCards").innerHTML = POOL.map((R, i) => {
+    const on = sel.includes(R.id), played = pr && pr.played.includes(R.id);
+    return '<button class="l-round" type="button" data-round="' + R.id + '" aria-pressed="' + on + '">' +
+      '<span class="l-check" aria-hidden="true">' + (on ? "✓" : "") + '</span>' +
+      '<span class="num">Раунд ' + (i + 1) + '</span><h3>' + esc(R.name) + '</h3><p>' + esc(R.blurb) + '</p>' +
+      '<span class="meta2"><span>' + LEVELS[R.level] + ' <span class="l-dots">' + [1, 2, 3].map(k => '<i class="' + (k <= R.level ? "on" : "") + '"></i>').join("") + '</span></span>' +
+      (played ? '<span class="l-played">Сыгран</span>' : '') + '</span></button>';
+  }).join("");
+  $("roundCards").querySelectorAll("[data-round]").forEach(b => b.addEventListener("click", () => {
+    const p2 = profile();
+    let cur = selection();
+    cur = cur.includes(b.dataset.round) ? cur.filter(x => x !== b.dataset.round) : cur.concat(b.dataset.round);
+    cur = POOL.map(R => R.id).filter(id => cur.includes(id));
+    if (p2) { p2.sel = cur.length ? cur : []; saveProfiles(); }
+    else selGuest = cur;
+    Sound.fx.up(); renderRounds();
+  }));
+  renderStart();
+}
+let newArmed = 0;
+function renderStart() {
+  const pr = profile(), box = $("startBox");
+  const sel = selection();
+  const count = sel.length;
+  const summary = count ? "Выбрано раундов: " + count + ", это примерно " + (count * 30) + " минут игры." : "Отметьте хотя бы один раунд.";
+  if (!pr) {
+    box.innerHTML = '<button class="btn solid big" type="button" id="toLogin">Войти, чтобы начать</button><p>' + summary + '</p>';
+    $("toLogin").addEventListener("click", () => { $("login").scrollIntoView({ behavior: "smooth" }); setTimeout(() => { const t = $("lTeam"); if (t) t.focus(); }, 400); });
+    return;
+  }
+  const going = inProgress();
+  box.innerHTML = going
+    ? '<button class="btn solid big" type="button" id="cont">Продолжить турнир</button>' +
+      '<button class="btn big" type="button" id="newT"' + (count ? '' : ' disabled') + '>Новый турнир с выбранными</button>' +
+      '<p>Сейчас идёт ' + esc(ROUNDS[S.round].title.toLowerCase()) + ' из ' + ROUNDS.length + ': «' + esc(ROUNDS[S.round].name) + '». ' + summary + '</p>'
+    : '<button class="btn solid big" type="button" id="newT"' + (count ? '' : ' disabled') + '>Начать турнир</button><p>' + summary + '</p>';
+  if ($("cont")) $("cont").addEventListener("click", () => { Sound.fx.newGame(); goPlay(); });
+  const nb = $("newT");
+  nb.addEventListener("click", () => {
+    if (!count) return;
+    if (going && Date.now() - newArmed > 3000) { newArmed = Date.now(); nb.textContent = "Счёт обнулится. Нажмите ещё раз"; setTimeout(() => { if (nb.isConnected && Date.now() - newArmed >= 3000) nb.textContent = "Новый турнир с выбранными"; }, 3100); return; }
+    newArmed = 0;
+    S = fresh(sel.slice()); save(); applyRound(); Sound.fx.newGame(); goPlay();
+  });
+}
+$("lPlay").addEventListener("click", () => { $(profile() ? "rounds" : "login").scrollIntoView({ behavior: "smooth" }); });
+$("menu").addEventListener("click", () => { location.hash = ""; });
+addEventListener("hashchange", () => { if (!IS_BUZZER) showScreen(); });
+
 // Starry ceiling of the Great Hall
 (function stars() {
   const cv = $("stars"), cx = cv.getContext("2d");
@@ -3378,7 +3779,6 @@ $("music").addEventListener("click", () => { Sound.setMusic(!Sound.prefs.music);
 $("sfx").addEventListener("click", () => { Sound.setSfx(!Sound.prefs.sfx); syncSoundButtons(); if (Sound.prefs.sfx) Sound.fx.pop(); });
 syncSoundButtons();
 
-renderPlayers();
-renderBoard();
+if (!IS_BUZZER) showScreen();
 </script>
 </body></html>

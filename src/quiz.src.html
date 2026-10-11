@@ -1,0 +1,1075 @@
+<title>Своя игра: Хогвартс</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yeseva+One&family=Nunito:wght@600;800;900&display=swap">
+<!--INLINE-LIBS-->
+<style>
+/* Layout: one TV screen. Header strip, 5x5 board filling the middle, two house scorecards at the bottom. Single deliberate "Great Hall at night" look. */
+:root {
+  --night: #0d1530;
+  --hall: #16224a;
+  --tile: #1d2d63;
+  --tile-hi: #27408a;
+  --gold: #e7c068;
+  --gold-soft: #b8944a;
+  --parchment: #f3e7c9;
+  --ink: #2a1d0c;
+  --muted: #8f9cc4;
+  --scarlet: #b3263a;
+  --azure: #2f6fd1;
+  --display: "Yeseva One", "Cormorant Garamond", Georgia, serif;
+  --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: radial-gradient(ellipse at 50% -10%, #24346e 0%, var(--night) 60%) fixed, var(--night);
+  color: var(--parchment);
+  font-family: var(--body);
+  overflow: hidden;
+}
+.app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(8px, 1.4vh, 18px);
+  padding-block: clamp(8px, 1.6vh, 20px);
+  padding-inline: clamp(16px, 2vw, 36px);
+  box-sizing: border-box;
+  max-width: 1900px;
+  margin-inline: auto;
+}
+canvas#stars { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+h1 {
+  font-family: var(--display); font-weight: 400; margin: 0;
+  font-size: clamp(22px, 3.4vw, 52px); color: var(--gold);
+  letter-spacing: .01em; line-height: 1; text-wrap: balance;
+  text-shadow: 0 0 24px rgba(231,192,104,.35);
+}
+h1 small { display: block; font-family: var(--body); font-size: .32em; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-top: .45em; font-weight: 800; }
+.tools { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  font: 800 clamp(13px, 1.05vw, 18px)/1 var(--body);
+  color: var(--parchment); background: transparent;
+  border: 2px solid var(--gold-soft); border-radius: 999px;
+  padding: .7em 1.2em; cursor: pointer;
+}
+.btn:hover { background: rgba(231,192,104,.12); }
+.btn:focus-visible, .tile:focus-visible, input:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.btn.sound[aria-pressed="false"] { opacity: .55; border-style: dashed; }
+.btn.solid { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.btn.solid:hover { background: #f2d184; }
+
+/* Board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: auto repeat(5, minmax(0, 1fr));
+  gap: clamp(5px, .7vw, 12px);
+  min-height: 0;
+}
+.cat {
+  font-family: var(--display); color: var(--gold);
+  font-size: clamp(13px, 1.75vw, 32px); line-height: 1.1;
+  text-align: center; padding: .55em .3em; text-wrap: balance;
+  border-bottom: 2px solid var(--gold-soft);
+  display: flex; align-items: center; justify-content: center;
+}
+.tile {
+  background: linear-gradient(180deg, var(--tile-hi), var(--tile));
+  border: 1px solid rgba(231,192,104,.25);
+  border-radius: 10px;
+  color: var(--gold);
+  font: 900 clamp(18px, 3.6vw, 66px)/1 var(--body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer; min-height: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 6px 16px rgba(0,0,0,.35);
+  transition: transform .15s ease, box-shadow .15s ease;
+  text-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+.tile:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 0 0 2px var(--gold), 0 10px 26px rgba(0,0,0,.45); }
+.tile.used {
+  background: rgba(22,34,74,.45); color: transparent; text-shadow: none;
+  box-shadow: none; border-style: dashed; cursor: default; transform: none;
+}
+
+/* Scorecards: any number of players, cards share the row */
+.bottom { display: flex; gap: clamp(10px, 1.5vw, 24px); align-items: stretch; }
+.players { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: clamp(8px, 1vw, 18px); }
+.player {
+  position: relative;
+  display: flex; align-items: center; gap: clamp(6px, 1vw, 18px);
+  padding: clamp(8px, 1.2vh, 16px) clamp(10px, 1.2vw, 22px);
+  border-radius: 14px; background: var(--hall);
+  border-top: 5px solid var(--house);
+  min-width: 0;
+}
+.crest {
+  width: clamp(28px, 2.8vw, 52px); aspect-ratio: 1; border-radius: 50%;
+  background: var(--house); flex: none; display: grid; place-items: center;
+  font: 400 clamp(15px, 1.6vw, 28px)/1 var(--display); color: var(--parchment);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+.player input {
+  font: 800 clamp(15px, 1.6vw, 30px)/1.1 var(--body);
+  background: transparent; border: none; color: var(--parchment);
+  min-width: 0; width: 100%; flex: 1; padding: .15em 0; border-bottom: 2px dashed rgba(143,156,196,.35);
+}
+.player input:hover, .player input:focus { border-bottom-color: var(--muted); }
+.score {
+  font: 900 clamp(24px, 3.4vw, 64px)/1 var(--body); color: var(--gold);
+  font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right;
+}
+.many .score { font-size: clamp(20px, 2.4vw, 46px); }
+.many .player input { font-size: clamp(14px, 1.3vw, 24px); }
+.adj { display: grid; gap: 4px; }
+.adj button {
+  font: 900 clamp(12px, .95vw, 16px)/1 var(--body); color: var(--parchment);
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px; padding: .35em .5em; cursor: pointer;
+}
+.adj button:hover { background: rgba(255,255,255,.16); }
+.remove {
+  position: absolute; top: 4px; right: 6px;
+  font: 900 13px/1 var(--body); color: var(--muted); background: transparent;
+  border: none; cursor: pointer; padding: 4px 6px; border-radius: 6px; opacity: 0;
+}
+.player:hover .remove, .remove:focus-visible, .remove.armed { opacity: 1; }
+.remove.armed { color: var(--parchment); background: var(--scarlet); }
+.mid { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; flex: none; }
+.left { color: var(--muted); font-weight: 800; font-size: clamp(12px, 1vw, 17px); text-align: center; line-height: 1.3; }
+.left b { display: block; color: var(--parchment); font-size: 1.6em; }
+.add { font-size: clamp(12px, .95vw, 16px); padding: .55em .9em; white-space: nowrap; }
+
+/* Question overlay */
+.overlay {
+  position: fixed; inset: 0; z-index: 10;
+  background: rgba(6,10,26,.86);
+  display: grid; place-items: center;
+  padding: clamp(16px, 3vw, 48px);
+}
+.card {
+  width: min(1500px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box;
+  background: var(--parchment); color: var(--ink);
+  border-radius: 18px; padding: clamp(18px, 3.4vw, 64px);
+  box-shadow: 0 0 0 6px var(--gold-soft), 0 30px 80px rgba(0,0,0,.6);
+  display: grid; gap: clamp(14px, 2.4vh, 32px);
+  animation: rise .35s ease-out;
+}
+@keyframes rise { from { transform: translateY(24px) scale(.97); opacity: .3; } to { transform: none; opacity: 1; } }
+.meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(13px, 1.3vw, 24px); color: #7a5a22; }
+.double {
+  background: var(--scarlet); color: var(--parchment); border-radius: 10px;
+  padding: .5em .9em; font: 900 clamp(16px, 2vw, 34px)/1.15 var(--body);
+  text-align: center; animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 50% { transform: scale(1.03); } }
+.q { font: 400 clamp(24px, 3.9vw, 72px)/1.2 var(--display); margin: 0; text-wrap: balance; }
+.a {
+  font: 900 clamp(22px, 3.2vw, 58px)/1.2 var(--body); color: #1e5a2a;
+  border-top: 3px dashed #c9b27c; padding-top: .5em; margin: 0;
+}
+.a span { display: block; font-size: .38em; letter-spacing: .14em; text-transform: uppercase; color: #7a5a22; margin-bottom: .35em; }
+.timer { height: 12px; border-radius: 6px; background: #e0cf9f; overflow: hidden; }
+.timer i { display: block; height: 100%; width: 100%; background: var(--gold-soft); transform-origin: left; }
+.timer.done i { background: var(--scarlet); }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.actions .btn { color: var(--ink); border-color: #a58a4f; font-size: clamp(15px, 1.5vw, 26px); }
+.actions .btn:hover { background: rgba(122,90,34,.12); }
+.actions .btn.solid { color: var(--ink); }
+.actions .btn.pl { background: var(--house); border-color: var(--house); color: var(--parchment); }
+.hint { font-size: clamp(11px, .85vw, 15px); color: #8a7550; font-weight: 700; }
+
+/* Final */
+.final { text-align: center; justify-items: center; }
+.final h2 { font: 400 clamp(32px, 5vw, 90px)/1.05 var(--display); margin: 0; color: #7a1d2a; text-wrap: balance; }
+.final .tally { display: flex; gap: clamp(16px, 4vw, 80px); justify-content: center; flex-wrap: wrap; }
+.final .tally div { font: 900 clamp(18px, 2.2vw, 40px)/1.2 var(--body); }
+.final .tally b { display: block; font-size: 2em; color: #7a5a22; font-variant-numeric: tabular-nums; }
+.final p { font: 800 clamp(18px, 2.2vw, 40px)/1.35 var(--body); margin: 0; max-width: 30ch; }
+canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
+
+/* Tournament */
+.scorebox { display: grid; justify-items: end; gap: 2px; }
+.total { font: 800 clamp(11px, .9vw, 15px)/1 var(--body); color: var(--muted); white-space: nowrap; }
+.standings-wrap { overflow-x: auto; max-width: 100%; }
+.standings { border-collapse: collapse; font: 800 clamp(16px, 1.7vw, 30px)/1.2 var(--body); font-variant-numeric: tabular-nums; margin-inline: auto; }
+.standings th { font-size: .55em; letter-spacing: .12em; text-transform: uppercase; color: #7a5a22; padding: .4em 1em; }
+.standings td { padding: .35em 1em; border-top: 2px dashed #c9b27c; text-align: right; }
+.standings td:first-child { text-align: left; display: flex; align-items: center; gap: .5em; }
+.standings td i { width: .7em; height: .7em; border-radius: 50%; background: var(--house); display: inline-block; }
+.standings td b { color: #7a1d2a; font-size: 1.2em; }
+
+/* Buzzer status on the question card */
+.buzz { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-radius: 12px; padding: .6em 1em; background: #e6d6ab; font-weight: 900; font-size: clamp(16px, 1.6vw, 28px); }
+.buzz span { font-size: .6em; letter-spacing: .12em; text-transform: uppercase; color: #7a5a22; }
+.buzz b { font-size: 1.2em; }
+.buzz.won { background: var(--house); color: var(--parchment); animation: rise .3s ease-out; }
+.buzz.won span { color: rgba(243,231,201,.85); }
+.buzz.won b { font-size: 1.6em; }
+.buzz .btn { margin-left: auto; color: var(--parchment); border-color: rgba(243,231,201,.7); font-size: .7em; }
+.player.linked .crest::after { content: ""; position: absolute; width: 10px; height: 10px; border-radius: 50%; background: #5ad17a; box-shadow: 0 0 8px #5ad17a; transform: translate(15px, -15px); }
+.crest { position: relative; }
+/* "Phones" instructions card */
+.phones h2 { font: 400 clamp(28px, 3.4vw, 60px)/1.1 var(--display); margin: 0; color: #7a1d2a; }
+.phones-row { display: flex; gap: clamp(16px, 3vw, 48px); align-items: flex-start; flex-wrap: wrap; }
+.qr { padding: 12px; background: #f3e7c9; border: 3px solid #a58a4f; border-radius: 12px; flex: none; }
+.qr svg { display: block; width: 240px; max-width: 100%; height: auto; }
+.phones ol { margin: 0; padding-left: 1.3em; display: grid; gap: .6em; font: 700 clamp(16px, 1.5vw, 26px)/1.4 var(--body); flex: 1; min-width: 0; }
+.phones code { font-size: .75em; word-break: break-all; background: #e6d6ab; padding: .1em .35em; border-radius: 6px; }
+.btn.mini { font-size: .7em; padding: .35em .8em; color: var(--ink); border-color: #a58a4f; }
+/* Phone buzzer page */
+.phone { min-height: 100%; box-sizing: border-box; padding: 20px 16px; display: flex; flex-direction: column; gap: 20px; --house: var(--azure); }
+.ph-msg { text-align: center; font: 700 18px/1.45 var(--body); color: var(--muted); padding-top: 12vh; }
+.ph-msg b { display: block; font: 400 34px/1.15 var(--display); color: var(--gold); margin-bottom: .4em; }
+.ph-pick { display: grid; gap: 12px; }
+.ph-pick button { font: 900 26px/1 var(--body); color: var(--parchment); background: var(--house); border: none; border-radius: 16px; padding: 22px; cursor: pointer; box-shadow: 0 0 0 3px var(--gold-soft); }
+.ph-head { display: flex; align-items: center; gap: 12px; font: 800 24px/1 var(--body); }
+.ph-head .crest { width: 44px; font-size: 24px; }
+.ph-head b { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ph-change { font: 800 14px/1 var(--body); color: var(--muted); background: transparent; border: 1px solid var(--muted); border-radius: 999px; padding: 8px 12px; }
+.ph-btn {
+  flex: 1; width: 100%; min-height: 60vh; border-radius: 28px; border: none; cursor: pointer;
+  display: grid; place-content: center; gap: 10px; text-align: center; color: var(--parchment);
+  font-family: var(--body); touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  background: #2a3566; box-shadow: inset 0 -10px 0 rgba(0,0,0,.25);
+}
+.ph-btn b { font: 900 clamp(40px, 13vw, 84px)/1 var(--body); }
+.ph-btn span { font: 800 22px/1.2 var(--body); opacity: .9; }
+.ph-btn.go { background: radial-gradient(circle at 50% 40%, #f6d98c, var(--gold) 55%, #b8862e); color: var(--ink); animation: pulse 1s ease-in-out infinite; box-shadow: 0 0 40px rgba(231,192,104,.6), inset 0 -10px 0 rgba(0,0,0,.2); }
+.ph-btn.go:active { transform: scale(.97); }
+.ph-btn.wait { background: var(--house); }
+.ph-btn.win { background: #2f8a4f; box-shadow: 0 0 50px rgba(90,209,122,.6); }
+.ph-btn.off { background: #2a2f45; color: var(--muted); }
+.ph-btn.idle { background: #1d2550; color: var(--muted); }
+.ph-btn:disabled { cursor: default; }
+
+@media (max-width: 640px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .board { grid-template-rows: auto repeat(5, 54px); }
+  .bottom { flex-direction: column; }
+  .mid { flex-direction: row; }
+  .remove { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="app">
+  <header>
+    <h1>Своя игра: Хогвартс<small id="roundLabel">Викторина по Гарри Поттеру</small></h1>
+    <div class="tools">
+      <button class="btn sound" id="music" type="button" aria-pressed="true">Музыка: вкл</button>
+      <button class="btn sound" id="sfx" type="button" aria-pressed="true">Звуки: вкл</button>
+      <button class="btn" id="phonesBtn" type="button" hidden>Кнопки на телефонах</button>
+      <button class="btn" id="fs" type="button">На весь экран</button>
+      <button class="btn" id="reset" type="button">Новый турнир</button>
+      <button class="btn solid" id="finish" type="button">Итоги и призы</button>
+    </div>
+  </header>
+
+  <main class="board" id="board" aria-label="Табло вопросов"></main>
+
+  <section class="bottom" aria-label="Игроки и счёт">
+    <div class="players" id="players"></div>
+    <div class="mid">
+      <div class="left">осталось<b id="left">25</b>вопросов</div>
+      <button class="btn add" type="button" id="addp">+ Игрок</button>
+    </div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="card" id="card" role="dialog" aria-modal="true" aria-labelledby="qtext"></div>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<main class="phone" id="phone" hidden aria-live="polite"></main>
+
+<script>
+// A tournament is a list of rounds played by the same players; round 2 doubles the prices.
+const BASE_PRICES = [100, 200, 300, 400, 500];
+const ROUNDS = [
+  { id: "hp-2", title: "Раунд 1", mult: 1, cats: [
+    { title: "Тайны Хогвартса", qs: [
+      ["Как зовут кошку завхоза Филча?", "Миссис Норрис"],
+      ["Какой предмет вёл профессор Снегг в первых книгах?", "Зельеварение"],
+      ["Как называется волшебная деревня рядом с Хогвартсом, куда ходят старшекурсники?", "Хогсмид"],
+      ["Какое дерево в Хогвартсе колотит ветками всех, кто подойдёт близко?", "Гремучая ива"],
+      ["Кто охраняет вход в гостиную Гриффиндора и что ей нужно сказать?", "Портрет Полной Дамы, ей нужно назвать пароль"]
+    ]},
+    { title: "Уроки и зелья", qs: [
+      ["Чему учит первокурсников мадам Трюк?", "Летать на метле"],
+      ["Как называется предмет про волшебные растения, который ведёт профессор Стебль?", "Травология"],
+      ["Как называется зелье, которое на час превращает тебя в другого человека?", "Оборотное зелье"],
+      ["Что такое безоар и от чего он спасает?", "Камень из желудка козы, он спасает от большинства ядов"],
+      ["Как называется золотистое зелье удачи?", "Феликс Фелицис, или «жидкая удача»"]
+    ]},
+    { title: "Семья Уизли", qs: [
+      ["Какого цвета волосы у всех Уизли?", "Рыжие"],
+      ["Как зовут единственную сестру Рона?", "Джинни"],
+      ["Как зовут братьев-близнецов, которые открыли магазин волшебных приколов?", "Фред и Джордж"],
+      ["Как называется дом семьи Уизли?", "Нора"],
+      ["Как звали крысу Рона и кем она оказалась на самом деле?", "Короста, а на самом деле это Питер Петтигрю"]
+    ]},
+    { title: "Волшебный мир", qs: [
+      ["Как называют людей без волшебных способностей?", "Маглы"],
+      ["Как называется банк волшебников, где работают гоблины?", "Гринготтс"],
+      ["На какой улице Лондона волшебники покупают палочки, мантии и учебники?", "Косой переулок"],
+      ["Как зовут мастера, который продал Гарри волшебную палочку?", "Олливандер"],
+      ["Что спрятано внутри палочки Гарри?", "Перо феникса Фоукса"]
+    ]},
+    { title: "Злодеи и загадки", qs: [
+      ["Как зовут злого волшебника, чьё имя боятся произносить?", "Волан-де-Морт"],
+      ["Как зовут светловолосого соперника Гарри со Слизерина?", "Драко Малфой"],
+      ["Какой профессор прятал Волан-де-Морта у себя под тюрбаном?", "Профессор Квиррелл"],
+      ["Чей старый дневник попал к Джинни и открыл Тайную комнату?", "Дневник Тома Реддла"],
+      ["Какое чудовище жило в Тайной комнате?", "Василиск, огромный змей"]
+    ]}
+  ]},
+  { id: "hp-r2", title: "Раунд 2", mult: 2, cats: [
+    { title: "Квиддич", qs: [
+      ["Сколько игроков в одной команде по квиддичу?", "Семь"],
+      ["Как называется красный мяч, который забрасывают в кольца?", "Квоффл"],
+      ["Какие мячи сами летают и пытаются сбить игроков с мётел?", "Бладжеры"],
+      ["Сколько очков получает команда, чей ловец поймал снитч?", "150 очков"],
+      ["Как называлась метла, которую Гарри подарили на первом курсе?", "«Нимбус-2000»"]
+    ]},
+    { title: "Звери и питомцы", qs: [
+      ["Какого питомца взял с собой в Хогвартс Невилл Долгопупс?", "Жабу Тревора"],
+      ["Какая птица живёт у Дамблдора и чем полезны её слёзы?", "Феникс Фоукс, его слёзы лечат раны"],
+      ["Как звали дракончика, которого Хагрид вырастил из яйца?", "Норберт"],
+      ["Как зовут огромного говорящего паука, старого друга Хагрида?", "Арагог"],
+      ["Какой пушистый зверёк с длинным носом тащит всё блестящее?", "Нюхлер"]
+    ]},
+    { title: "Профессора", qs: [
+      ["Кто ведёт трансфигурацию и умеет превращаться в кошку?", "Профессор Макгонагалл"],
+      ["Какой крошечный профессор учит заклинаниям и стоит на стопке книг?", "Профессор Флитвик"],
+      ["Какой добрый профессор защиты от тёмных искусств оказался оборотнем?", "Римус Люпин"],
+      ["У какого профессора был волшебный вращающийся глаз?", "Грозный Глаз Грюм"],
+      ["Какой профессор хвастался чужими подвигами и в итоге потерял память?", "Златопуст Локонс"]
+    ]},
+    { title: "Всё о Гарри", qs: [
+      ["Где спал Гарри в доме Дурслей до Хогвартса?", "В чулане под лестницей"],
+      ["Как зовут толстого двоюродного брата Гарри?", "Дадли"],
+      ["Когда у Гарри день рождения?", "31 июля"],
+      ["Как звали маму и папу Гарри?", "Лили и Джеймс Поттеры"],
+      ["С какими животными Гарри умеет разговаривать и как называют таких волшебников?", "Со змеями, таких волшебников называют змееустами"]
+    ]},
+    { title: "Волшебные предметы", qs: [
+      ["Как называется письмо, которое кричит голосом отправителя?", "Громовещатель"],
+      ["Какая карта показывает, где находится каждый человек в Хогвартсе?", "Карта Мародёров"],
+      ["Какой предмет помогал Гермионе успевать на два урока одновременно?", "Маховик времени"],
+      ["Что делает Кубок огня в четвёртой книге?", "Выбирает участников Турнира трёх волшебников"],
+      ["Как называется каменная чаша, в которой можно смотреть чужие воспоминания?", "Омут памяти"]
+    ]}
+  ]}
+
+];
+let QUIZ = ROUNDS[0].cats, PRICES = BASE_PRICES;
+function applyRound() {
+  const R = ROUNDS[S.round] || ROUNDS[0];
+  QUIZ = R.cats; PRICES = BASE_PRICES.map(p => p * R.mult);
+}
+
+const KEY = "hp-svoya-igra-v1";
+const IS_BUZZER = /^#buzz-/.test(location.hash);
+let S = load();
+
+const HOUSES = ["#b3263a", "#2f6fd1", "#2f8a4f", "#c98a12", "#7a4fc2", "#1c8c93", "#c2457f", "#8a6a3a"];
+const MAX_PLAYERS = 8;
+
+function randomDouble() { return Math.floor(Math.random() * 5) + "-" + (1 + Math.floor(Math.random() * 4)); }
+// A new tournament keeps the names; `past` holds each player's score in the finished rounds
+function fresh() {
+  const players = S ? S.players.map(p => ({ name: p.name, score: 0, past: [] })) : [{ name: "Игрок 1", score: 0, past: [] }, { name: "Игрок 2", score: 0, past: [] }];
+  return { players, used: {}, dbl: randomDouble(), round: 0 };
+}
+function nextRound() {
+  S.players.forEach(p => { p.past = (p.past || []).slice(0, S.round); while (p.past.length < S.round) p.past.push(0); p.past.push(p.score); p.score = 0; });
+  S.round++; S.used = {}; S.dbl = randomDouble();
+  save(); applyRound(); renderAll();
+}
+function total(p) { return (p.past || []).reduce((a, b) => a + b, 0) + p.score; }
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.players) {
+      // Saves from before tournaments: a board of the old "hp-2" set becomes round 1, anything older starts clean
+      if (!Number.isInteger(s.round)) {
+        if (s.qset !== "hp-2") { s.players.forEach(p => { p.score = 0; }); s.used = {}; s.dbl = randomDouble(); }
+        s.round = 0; delete s.qset;
+      }
+      if (s.round >= ROUNDS.length) s.round = ROUNDS.length - 1;
+      s.players.forEach(p => { if (!Array.isArray(p.past)) p.past = []; });
+      return s;
+    }
+    if (s && s.scores) return { players: s.names.map((n, i) => ({ name: n, score: s.scores[i] })), used: s.used, dbl: s.dbl };
+  } catch (e) {}
+  return null;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+if (!S) S = fresh();
+applyRound();
+
+const $ = id => document.getElementById(id);
+const board = $("board"), overlay = $("overlay"), card = $("card");
+let lastTile = null, timerRAF = 0;
+
+function renderBoard() {
+  board.innerHTML = "";
+  QUIZ.forEach(c => { const d = document.createElement("div"); d.className = "cat"; d.textContent = c.title; board.appendChild(d); });
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const b = document.createElement("button");
+      const id = c + "-" + r, used = !!S.used[id];
+      b.type = "button"; b.className = "tile" + (used ? " used" : "");
+      b.textContent = PRICES[r]; b.dataset.id = id;
+      b.setAttribute("aria-label", QUIZ[c].title + ", " + PRICES[r] + (used ? ", уже сыгран" : ""));
+      if (used) b.disabled = true;
+      b.addEventListener("click", () => openQ(c, r, b));
+      board.appendChild(b);
+    }
+  }
+  renderScores();
+}
+function house(i) { return HOUSES[i % HOUSES.length]; }
+function name(i) { return S.players[i].name.trim() || ("Игрок " + (i + 1)); }
+function initial(i) { return name(i).charAt(0).toUpperCase(); }
+
+// Rebuilt only when players are added or removed, so typing a name keeps focus
+function renderPlayers() {
+  const box = $("players");
+  box.innerHTML = "";
+  box.classList.toggle("many", S.players.length > 3);
+  S.players.forEach((p, i) => {
+    const d = document.createElement("div");
+    d.className = "player"; d.style.setProperty("--house", house(i));
+    d.innerHTML =
+      '<div class="crest" aria-hidden="true">' + esc(initial(i)) + '</div>' +
+      '<input id="name' + i + '" aria-label="Имя игрока ' + (i + 1) + '" maxlength="18" placeholder="Имя">' +
+      '<div class="scorebox"><div class="score" id="score' + i + '">' + p.score + '</div><div class="total" id="total' + i + '"></div></div>' +
+      '<div class="adj"><button type="button" data-v="100" aria-label="Добавить 100">+100</button><button type="button" data-v="-100" aria-label="Отнять 100">−100</button></div>' +
+      (S.players.length > 1 ? '<button class="remove" type="button" aria-label="Убрать игрока">✕</button>' : '');
+    const inp = d.querySelector("input");
+    inp.value = p.name;
+    inp.addEventListener("input", () => { p.name = inp.value; d.querySelector(".crest").textContent = initial(i); save(); hostPublish(); });
+    d.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => { p.score += +b.dataset.v; save(); renderScores(); +b.dataset.v > 0 ? Sound.fx.up() : Sound.fx.down(); }));
+    const rm = d.querySelector(".remove");
+    if (rm) rm.addEventListener("click", () => {
+      if (rm.classList.contains("armed")) { S.players.splice(i, 1); save(); renderPlayers(); Sound.fx.down(); return; }
+      rm.classList.add("armed"); rm.textContent = "Убрать?";
+      setTimeout(() => { rm.classList.remove("armed"); rm.textContent = "✕"; }, 3000);
+    });
+    box.appendChild(d);
+  });
+  $("addp").disabled = S.players.length >= MAX_PLAYERS;
+  $("addp").hidden = S.players.length >= MAX_PLAYERS;
+  renderScores(); hostPublish(); renderLinked();
+}
+function renderScores() {
+  S.players.forEach((p, i) => {
+    const el = $("score" + i), t = $("total" + i);
+    if (el) el.textContent = p.score;
+    if (t) { t.hidden = S.round === 0; t.textContent = "в турнире " + total(p); }
+  });
+  $("roundLabel").textContent = ROUNDS[S.round].title + " из " + ROUNDS.length + (ROUNDS[S.round].mult > 1 ? " · очки ×" + ROUNDS[S.round].mult : "") + " · Викторина по Гарри Поттеру";
+  $("left").textContent = 25 - Object.keys(S.used).length;
+}
+function esc(t) { return t.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+
+function openQ(c, r, tile) {
+  const id = c + "-" + r, [q, a] = QUIZ[c].qs[r];
+  const isDbl = S.dbl === id, pts = PRICES[r] * (isDbl ? 2 : 1);
+  lastTile = tile;
+  Sound.fx.open(); Sound.duck(true);
+  if (isDbl) Sound.fx.owl();
+  card.className = "card";
+  card.innerHTML =
+    '<div class="meta"><span>' + esc(QUIZ[c].title) + '</span><span>' + pts + ' очков</span></div>' +
+    (isDbl ? '<div class="double">Сова принесла сюрприз! Этот вопрос стоит вдвое больше</div>' : '') +
+    '<p class="q" id="qtext">' + esc(q) + '</p>' +
+    '<div class="buzz" id="buzz" hidden></div>' +
+    '<div class="timer" id="timer" hidden><i id="bar"></i></div>' +
+    '<p class="a" id="ans" hidden><span>Правильный ответ</span>' + esc(a) + '</p>' +
+    '<div class="actions" id="act1">' +
+      '<button class="btn solid" type="button" id="show">Показать ответ</button>' +
+      '<button class="btn" type="button" id="tstart">Таймер 30 секунд</button>' +
+    '</div>' +
+    '<div class="actions" id="act2" hidden>' +
+      S.players.map((p, i) => '<button class="btn pl" type="button" style="--house:' + house(i) + '" data-win="' + i + '">' + esc(name(i)) + ' +' + pts + '</button>').join("") +
+      '<button class="btn" type="button" data-win="-1">Никто не угадал</button>' +
+    '</div>' +
+    '<div class="hint">Пробел: показать ответ · цифра 1–' + S.players.length + ': очки игроку · Esc: закрыть без очков</div>';
+  overlay.hidden = false;
+  $("show").addEventListener("click", reveal);
+  $("tstart").addEventListener("click", startTimer);
+  card.querySelectorAll("[data-win]").forEach(b => b.addEventListener("click", () => award(id, +b.dataset.win, pts)));
+  $("show").focus();
+  buzzOpen();
+}
+function reveal() {
+  if (!$("ans") || !$("ans").hidden) return;
+  stopTimer(); Sound.fx.reveal();
+  B.open = false; hostPublish(); renderBuzz();
+  $("ans").hidden = false; $("act1").hidden = true; $("act2").hidden = false;
+  (card.querySelector('[data-win="' + B.winner + '"]') || card.querySelector("[data-win]")).focus();
+}
+function startTimer() {
+  const t = $("timer"), bar = $("bar"), dur = 30000, t0 = performance.now();
+  let lastSec = 30;
+  t.hidden = false; t.classList.remove("done");
+  cancelAnimationFrame(timerRAF);
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur);
+    bar.style.transform = "scaleX(" + (1 - k) + ")";
+    const sec = Math.ceil((1 - k) * 30);
+    if (sec < lastSec) { lastSec = sec; if (sec > 0 && sec <= 5) Sound.fx.tick(sec === 1); }
+    if (k < 1) timerRAF = requestAnimationFrame(step); else { t.classList.add("done"); Sound.fx.gong(); }
+  };
+  timerRAF = requestAnimationFrame(step);
+}
+function stopTimer() { cancelAnimationFrame(timerRAF); }
+function award(id, who, pts) {
+  if (who >= 0 && S.players[who]) { S.players[who].score += pts; Sound.fx.correct(); } else Sound.fx.miss();
+  S.used[id] = 1; save(); close();
+  renderBoard();
+  if (Object.keys(S.used).length === 25) setTimeout(showFinal, 400);
+}
+function close() {
+  stopTimer(); overlay.hidden = true; card.innerHTML = ""; Sound.duck(false);
+  if (B.open || B.winner != null) buzzStop();
+  if (lastTile && !lastTile.disabled) lastTile.focus();
+}
+
+function leaderText(vals, cup) {
+  const top = Math.max(...vals);
+  const leaders = vals.map((v, i) => i).filter(i => vals[i] === top);
+  return S.players.length === 1 ? "Отличная игра, " + name(0) + "!" :
+    leaders.length === S.players.length ? "Ничья! Все настоящие волшебники" :
+    leaders.length > 1 ? cup + " делят " + leaders.map(name).join(" и ") + "!" :
+    cup + " у игрока " + name(leaders[0]) + "!";
+}
+function roundLeader() {
+  const vals = S.players.map(p => p.score), top = Math.max(...vals);
+  const leaders = vals.map((v, i) => i).filter(i => vals[i] === top);
+  return S.players.length === 1 ? "" : leaders.length === S.players.length ? "Пока ничья" :
+    leaders.length > 1 ? "Лучшие: " + leaders.map(name).join(" и ") : "Лучший: " + name(leaders[0]);
+}
+function standings() {
+  const cols = ROUNDS.slice(0, S.round + 1);
+  return '<div class="standings-wrap"><table class="standings"><thead><tr><th>Игрок</th>' +
+    cols.map(R => '<th>' + esc(R.title) + '</th>').join("") + '<th>Всего</th></tr></thead><tbody>' +
+    S.players.map((p, i) => '<tr><td><i style="--house:' + house(i) + '"></i>' + esc(name(i)) + '</td>' +
+      cols.map((R, r) => '<td>' + (r < S.round ? ((p.past || [])[r] || 0) : p.score) + '</td>').join("") +
+      '<td><b>' + total(p) + '</b></td></tr>').join("") +
+    '</tbody></table></div>';
+}
+function showFinal() {
+  const last = S.round >= ROUNDS.length - 1;
+  const head = last
+    ? (ROUNDS.length > 1 ? leaderText(S.players.map(total), "Кубок турнира") : leaderText(S.players.map(p => p.score), "Кубок школы"))
+    : ROUNDS[S.round].title + " окончен! " + roundLeader();
+  card.className = "card final";
+  card.innerHTML =
+    '<h2 id="qtext">' + esc(head) + '</h2>' +
+    standings() +
+    (last ? '<p>Призы получают ' + (S.players.length === 2 ? "оба" : "все") + '! Спасибо за игру, юные маги.</p>'
+          : '<p>Очки сохранятся. Дальше ' + esc(ROUNDS[S.round + 1].title.toLowerCase()) + (ROUNDS[S.round + 1].mult > 1 ? ', вопросы стоят в ' + ROUNDS[S.round + 1].mult + ' раза дороже' : '') + '.</p>') +
+    '<div class="actions">' +
+      (last ? '<button class="btn solid" type="button" id="again">Новый турнир</button>'
+            : '<button class="btn solid" type="button" id="nextr">Начать ' + esc(ROUNDS[S.round + 1].title.toLowerCase()) + '</button>') +
+      '<button class="btn" type="button" id="back">Вернуться к табло</button></div>';
+  overlay.hidden = false; Sound.duck(true); Sound.fx.final();
+  if ($("again")) $("again").addEventListener("click", () => { newGame(); close(); Sound.fx.newGame(); });
+  if ($("nextr")) $("nextr").addEventListener("click", () => { nextRound(); close(); Sound.fx.newGame(); });
+  $("back").addEventListener("click", close);
+  confetti();
+}
+function newGame() { S = fresh(); save(); applyRound(); renderAll(); }
+function renderAll() { renderPlayers(); renderBoard(); }
+
+// Two-step reset so a stray click does not wipe the game
+const resetBtn = $("reset"); let armed = 0;
+resetBtn.addEventListener("click", () => {
+  if (Date.now() - armed < 3000) { newGame(); Sound.fx.newGame(); resetBtn.textContent = "Новый турнир"; armed = 0; return; }
+  armed = Date.now(); resetBtn.textContent = "Точно? Нажмите ещё раз";
+  setTimeout(() => { if (armed && Date.now() - armed >= 3000) { resetBtn.textContent = "Новый турнир"; armed = 0; } }, 3100);
+});
+$("finish").addEventListener("click", showFinal);
+$("phonesBtn").addEventListener("click", openPhones);
+$("fs").addEventListener("click", () => {
+  const d = document;
+  try {
+    if (d.fullscreenElement) d.exitFullscreen();
+    else { const p = d.documentElement.requestFullscreen(); if (p && p.catch) p.catch(() => {}); }
+  } catch (e) {}
+});
+document.addEventListener("fullscreenchange", () => { $("fs").textContent = document.fullscreenElement ? "Выйти из полного экрана" : "На весь экран"; });
+$("addp").addEventListener("click", () => {
+  if (S.players.length >= MAX_PLAYERS) return;
+  S.players.push({ name: "", score: 0, past: [] }); save(); renderPlayers(); Sound.fx.pop();
+  const inp = $("name" + (S.players.length - 1)); if (inp) inp.focus();
+});
+
+document.addEventListener("keydown", e => {
+  if (overlay.hidden) return;
+  if (e.key === "Escape") { Sound.fx.close(); close(); return; }
+  const a2 = $("act2");
+  if ((e.key === " " || e.key === "Enter") && $("ans") && $("ans").hidden) { e.preventDefault(); reveal(); return; }
+  if (a2 && !a2.hidden && /^[1-9]$/.test(e.key)) {
+    const b = card.querySelector('[data-win="' + (+e.key - 1) + '"]');
+    if (b) b.click();
+  }
+});
+
+
+// ---------- Phone buzzers over a public MQTT broker ----------
+// The TV page and the phones meet on a topic named by a random game code; no accounts needed.
+// The TV keeps the round state in a retained message (phones that join late get it at once);
+// phones send "hello" every few seconds and a "buzz" when pressed. The TV takes the first buzz it hears.
+const PUBLIC_URL = "https://nicknameantares.github.io/kids-quiz/";
+const BROKERS = window.QUIZ_TEST_BROKERS || ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt", "wss://test.mosquitto.org:8081/mqtt"];
+const B = { round: 0, open: false, winner: null, locked: [], tries: 0 };
+const PHONES = new Map();
+let net = null, netBroker = -1;
+
+const HASH = /^#buzz-([a-z0-9]{4,12})-(\d)$/.exec(location.hash);
+const PAGE_URL = location.protocol.startsWith("http") && !/claude/.test(location.host) ? location.href.split("#")[0] : PUBLIC_URL;
+let GAME = HASH ? HASH[1] : null;
+if (!GAME) {
+  try { GAME = localStorage.getItem("hp-game-code"); } catch (e) {}
+  if (!/^[a-z0-9]{4,12}$/.test(GAME || "")) {
+    GAME = Array.from({ length: 6 }, () => "abcdefghjkmnpqrstuvwxyz23456789"[Math.floor(Math.random() * 31)]).join("");
+    try { localStorage.setItem("hp-game-code", GAME); } catch (e) {}
+  }
+}
+const TOPIC = "svoyaigra-hp/" + GAME;
+function buzzUrl() { return PAGE_URL + "#buzz-" + GAME + "-" + netBroker; }
+
+function connectBroker(url) {
+  return new Promise(resolve => {
+    if (typeof mqtt === "undefined") return resolve(null);
+    let done = false, c;
+    try { c = mqtt.connect(url, { clientId: "q" + Math.random().toString(36).slice(2, 12), clean: true, connectTimeout: 6000, reconnectPeriod: 2000, keepalive: 20 }); }
+    catch (e) { return resolve(null); }
+    const fail = () => { if (done) return; done = true; try { c.end(true); } catch (e) {} resolve(null); };
+    c.once("connect", () => { if (done) return; done = true; resolve(c); });
+    c.once("error", fail);
+    setTimeout(fail, 7000);
+  });
+}
+function send(sub, obj, retain) {
+  if (!net || !net.connected) return;
+  try { net.publish(TOPIC + "/" + sub, JSON.stringify(obj), { qos: 0, retain: !!retain }); } catch (e) {}
+}
+function parse(buf) { try { const v = JSON.parse(buf.toString()); return v && typeof v === "object" ? v : null; } catch (e) { return null; } }
+
+// ----- TV side -----
+function hostPublish() {
+  if (!net || IS_BUZZER) return;
+  send("state", {
+    round: B.round, tries: B.tries, open: B.open, winner: B.winner, locked: B.locked,
+    players: S.players.map((p, i) => ({ n: name(i).slice(0, 18), c: house(i) }))
+  }, true);
+}
+function phoneCount() {
+  const now = Date.now();
+  for (const [id, p] of PHONES) if (now - p.seen > 12000) PHONES.delete(id);
+  return PHONES.size;
+}
+function buzzOpen() {
+  B.round++; B.tries = 0; B.open = !!net; B.winner = null; B.locked = [];
+  hostPublish(); renderBuzz();
+}
+function buzzStop() { B.open = false; B.winner = null; hostPublish(); }
+function buzzRetry() {
+  if (B.winner != null) B.locked.push(B.winner);
+  B.winner = null; B.open = true; B.tries++; hostPublish(); renderBuzz();
+}
+function renderBuzz() {
+  const el = $("buzz");
+  if (!el) return;
+  el.hidden = !net || phoneCount() === 0;
+  if (el.hidden) return;
+  if (B.winner != null && S.players[B.winner]) {
+    el.className = "buzz won"; el.style.setProperty("--house", house(B.winner));
+    el.innerHTML = '<span>Первым нажал</span><b>' + esc(name(B.winner)) + '</b>' +
+      '<button class="btn" type="button" id="retry">Неверно, пусть ответят другие</button>';
+    $("retry").addEventListener("click", () => { Sound.fx.miss(); buzzRetry(); });
+  } else {
+    el.className = "buzz"; el.style.removeProperty("--house");
+    el.innerHTML = B.open ? '<span>Кнопки на телефонах</span><b>Кто первый?</b>' : '<span>Кнопки на телефонах</span><b>Выключены</b>';
+  }
+}
+function renderLinked() {
+  phoneCount();
+  const counts = {};
+  PHONES.forEach(p => { if (Number.isInteger(p.player)) counts[p.player] = (counts[p.player] || 0) + 1; });
+  document.querySelectorAll(".player").forEach((d, i) => d.classList.toggle("linked", !!counts[i]));
+  const list = $("phonelist");
+  if (list) {
+    const ps = [...PHONES.values()];
+    list.textContent = ps.length ? "Подключено телефонов: " + ps.length + " (" + ps.map(p => Number.isInteger(p.player) && S.players[p.player] ? name(p.player) : "ещё выбирает").join(", ") + ")" : "Пока ни одного телефона.";
+  }
+}
+function onHostMessage(topic, buf) {
+  const m = parse(buf);
+  if (!m || typeof m.id !== "string") return;
+  const kind = topic.slice(TOPIC.length + 1);
+  const known = PHONES.get(m.id);
+  PHONES.set(m.id, { player: Number.isInteger(m.player) ? m.player : null, seen: Date.now() });
+  if (kind === "hello") {
+    if (!known) hostPublish(); // a newcomer gets fresh state
+    renderLinked(); renderBuzz();
+    return;
+  }
+  if (kind === "buzz" && B.open && B.winner == null && m.round === B.round && m.tries === B.tries &&
+      Number.isInteger(m.player) && S.players[m.player] && !B.locked.includes(m.player)) {
+    B.winner = m.player; B.open = false;
+    stopTimer(); Sound.fx.buzz(); hostPublish(); renderBuzz();
+  }
+}
+
+function openPhones() {
+  card.className = "card phones";
+  const url = buzzUrl();
+  card.innerHTML =
+    '<h2 id="qtext">Кнопки на телефонах</h2>' +
+    '<div class="phones-row"><div class="qr" id="qr" aria-label="QR-код ссылки"></div><ol>' +
+      '<li>Подключите телефоны к интернету (лучше к тому же Wi-Fi).</li>' +
+      '<li>Наведите камеру телефона на QR-код или откройте ссылку:<br><code id="burl">' + esc(url) + '</code> <button class="btn mini" type="button" id="copy">Скопировать</button></li>' +
+      '<li>Выберите на телефоне своё имя.</li>' +
+      '<li>Когда на табло открыт вопрос, кнопка загорается. Кто нажал первым, тот и отвечает.</li>' +
+    '</ol></div>' +
+    '<p class="hint" id="phonelist"></p>' +
+    '<div class="actions"><button class="btn solid" type="button" id="pclose">Готово</button></div>';
+  overlay.hidden = false;
+  try {
+    const qr = qrcode(0, "M"); qr.addData(url); qr.make();
+    $("qr").innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  } catch (e) { $("qr").hidden = true; }
+  $("copy").addEventListener("click", () => {
+    const b = $("copy");
+    try { navigator.clipboard.writeText(url).then(() => { b.textContent = "Скопировано"; }, () => selectUrl()); } catch (e) { selectUrl(); }
+  });
+  $("pclose").addEventListener("click", close);
+  renderLinked();
+}
+function selectUrl() { const r = document.createRange(); r.selectNodeContents($("burl")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+// ----- Phone side -----
+const PH = { id: "p" + Math.random().toString(36).slice(2, 10), player: null, state: null, stateAt: 0, pressed: "", status: "connecting" };
+try { const v = parseInt(localStorage.getItem("hp-buzzer-player-" + GAME), 10); if (Number.isInteger(v)) PH.player = v; } catch (e) {}
+function phoneHello() { send("hello", { id: PH.id, player: PH.player }); }
+
+function phoneRender() {
+  const box = $("phone");
+  const h = PH.state && Date.now() - PH.stateAt < 30000 ? PH.state : null;
+  const players = h && Array.isArray(h.players) ? h.players : [];
+  if (PH.status === "failed") {
+    box.innerHTML = '<div class="ph-msg"><b>Нет связи</b>Проверьте интернет на телефоне и откройте ссылку ещё раз.</div>';
+    return;
+  }
+  if (PH.status !== "online" || !h) {
+    box.innerHTML = '<div class="ph-msg"><b>' + (PH.status === "online" ? "Ждём табло…" : "Подключаемся…") + '</b>Игра должна быть открыта на ноутбуке. Как только табло отзовётся, здесь можно будет выбрать игрока.</div>';
+    return;
+  }
+  if (PH.player == null || !players[PH.player]) {
+    box.innerHTML = '<div class="ph-msg"><b>Кто ты?</b>Нажми на своё имя</div><div class="ph-pick">' +
+      players.map((p, i) => '<button type="button" data-pick="' + i + '" style="--house:' + esc(String(p.c || "#2f6fd1")) + '">' + esc(String(p.n || "Игрок " + (i + 1))) + '</button>').join("") + '</div>';
+    box.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => {
+      PH.player = +b.dataset.pick;
+      try { localStorage.setItem("hp-buzzer-player-" + GAME, PH.player); } catch (e) {}
+      phoneHello(); phoneRender();
+    }));
+    return;
+  }
+  const me = players[PH.player], locked = Array.isArray(h.locked) && h.locked.includes(PH.player);
+  const key = h.round + ":" + h.tries;
+  let state, label, sub = "";
+  if (h.winner === PH.player) { state = "win"; label = "Ты первый!"; sub = "Отвечай вслух"; }
+  else if (h.winner != null && players[h.winner]) { state = "off"; label = "Отвечает"; sub = String(players[h.winner].n || ""); }
+  else if (h.open && locked) { state = "off"; label = "Ты уже отвечал"; sub = "Ждём других"; }
+  else if (h.open && PH.pressed === key) { state = "wait"; label = "Нажато!"; sub = "Проверяем, кто первый"; }
+  else if (h.open) { state = "go"; label = "ЖМИ!"; }
+  else { state = "idle"; label = "Ждём вопрос"; }
+  box.style.setProperty("--house", String(me.c || "#2f6fd1"));
+  box.innerHTML =
+    '<div class="ph-head"><span class="crest">' + esc(String(me.n || "?").charAt(0).toUpperCase()) + '</span><b>' + esc(String(me.n || "")) + '</b>' +
+    '<button type="button" class="ph-change" id="phchange">Сменить</button></div>' +
+    '<button type="button" class="ph-btn ' + state + '" id="phbtn"' + (state === "go" ? "" : " disabled") + '><b>' + esc(label) + '</b>' + (sub ? '<span>' + esc(sub) + '</span>' : '') + '</button>';
+  $("phchange").addEventListener("click", () => { PH.player = null; try { localStorage.removeItem("hp-buzzer-player-" + GAME); } catch (e) {} phoneHello(); phoneRender(); });
+  const btn = $("phbtn");
+  btn.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    if (btn.disabled) return;
+    PH.pressed = key;
+    send("buzz", { id: PH.id, player: PH.player, round: h.round, tries: h.tries, at: Date.now() });
+    try { navigator.vibrate && navigator.vibrate(60); } catch (err) {}
+    Sound.fx.pop();
+    phoneRender();
+  });
+}
+
+if (IS_BUZZER) {
+  document.querySelector(".app").hidden = true;
+  $("phone").hidden = false;
+  phoneRender();
+}
+
+(async () => {
+  if (IS_BUZZER) {
+    const idx = HASH ? +HASH[2] : 0;
+    net = await connectBroker(BROKERS[idx] || BROKERS[0]);
+    if (!net) { PH.status = "failed"; phoneRender(); return; }
+    PH.status = "online";
+    net.on("connect", () => { PH.status = "online"; net.subscribe(TOPIC + "/state"); phoneHello(); phoneRender(); });
+    net.on("offline", () => { PH.status = "connecting"; phoneRender(); });
+    net.on("message", (t, buf) => {
+      const m = parse(buf);
+      if (!m) return;
+      const prevWinner = PH.state && PH.state.winner, prevKey = PH.state && PH.state.round + ":" + PH.state.tries;
+      PH.state = m; PH.stateAt = Date.now();
+      if (Array.isArray(m.players) && PH.player != null && !m.players[PH.player]) PH.player = null;
+      if (m.winner === PH.player && m.winner != null && (prevWinner !== m.winner || prevKey !== m.round + ":" + m.tries)) {
+        try { navigator.vibrate && navigator.vibrate([80, 60, 160]); } catch (e) {}
+      }
+      phoneRender();
+    });
+    net.subscribe(TOPIC + "/state");
+    phoneHello();
+    setInterval(() => { phoneHello(); phoneRender(); }, 4000);
+    phoneRender();
+    return;
+  }
+  if (!PAGE_URL) return;
+  for (let i = 0; i < BROKERS.length && !net; i++) { net = await connectBroker(BROKERS[i]); if (net) netBroker = i; }
+  if (!net) return;
+  $("phonesBtn").hidden = false;
+  net.on("connect", () => { net.subscribe([TOPIC + "/hello", TOPIC + "/buzz"]); hostPublish(); });
+  net.on("message", onHostMessage);
+  net.subscribe([TOPIC + "/hello", TOPIC + "/buzz"]);
+  hostPublish();
+  setInterval(() => { hostPublish(); renderLinked(); renderBuzz(); }, 8000);
+})();
+
+// Starry ceiling of the Great Hall
+(function stars() {
+  const cv = $("stars"), cx = cv.getContext("2d");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let pts = [];
+  function size() {
+    cv.width = innerWidth; cv.height = innerHeight;
+    pts = Array.from({ length: Math.round(innerWidth * innerHeight / 9000) }, () => ({
+      x: Math.random() * cv.width, y: Math.random() * cv.height * .9,
+      r: Math.random() * 1.4 + .3, p: Math.random() * 6.28
+    }));
+  }
+  function draw(t) {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    for (const s of pts) {
+      cx.globalAlpha = .35 + .35 * Math.sin(s.p + t / 900);
+      cx.fillStyle = "#f3e7c9";
+      cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.28); cx.fill();
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  addEventListener("resize", () => { size(); if (reduce) draw(0); });
+  size(); requestAnimationFrame(draw);
+})();
+
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = $("confetti"), cx = cv.getContext("2d");
+  cv.width = innerWidth; cv.height = innerHeight;
+  const cols = ["#e7c068", "#b3263a", "#2f6fd1", "#f3e7c9", "#3d8b4f"];
+  const ps = Array.from({ length: 220 }, () => ({
+    x: Math.random() * cv.width, y: -20 - Math.random() * cv.height * .6,
+    vx: (Math.random() - .5) * 2.4, vy: 2 + Math.random() * 3.5,
+    w: 6 + Math.random() * 8, h: 4 + Math.random() * 6,
+    a: Math.random() * 6.28, va: (Math.random() - .5) * .25,
+    c: cols[Math.floor(Math.random() * cols.length)]
+  }));
+  const t0 = performance.now();
+  (function tick(now) {
+    cx.clearRect(0, 0, cv.width, cv.height);
+    for (const p of ps) {
+      p.x += p.vx; p.y += p.vy; p.a += p.va;
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.a); cx.fillStyle = p.c;
+      cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); cx.restore();
+    }
+    if (now - t0 < 6000) requestAnimationFrame(tick); else cx.clearRect(0, 0, cv.width, cv.height);
+  })(t0);
+}
+
+// Sound: everything is synthesized with Web Audio, so the page needs no audio files.
+// Original waltz-like celesta music in E minor; browsers allow sound only after the first click or key press.
+const Sound = (() => {
+  const PREF = "hp-svoya-igra-sound";
+  let prefs = { music: true, sfx: true };
+  try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREF)) || {}); } catch (e) {}
+  let ctx = null, master, musicBus, sfxBus, verb, timer = 0, nextBar = 0, bar = 0;
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  function init() {
+    if (ctx) { if (ctx.state === "suspended") ctx.resume(); return true; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    try { ctx = new AC(); } catch (e) { return false; }
+    const comp = ctx.createDynamicsCompressor();
+    master = ctx.createGain(); master.gain.value = .9;
+    master.connect(comp); comp.connect(ctx.destination);
+    musicBus = ctx.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = prefs.sfx ? 1 : 0; sfxBus.connect(master);
+    // Small hall reverb from decaying noise
+    verb = ctx.createConvolver();
+    const len = ctx.sampleRate * 2.6, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+    }
+    verb.buffer = ir;
+    const wet = ctx.createGain(); wet.gain.value = .35; verb.connect(wet); wet.connect(master);
+    return true;
+  }
+  function out(dest, wetAmt) {
+    const g = ctx.createGain(); g.connect(dest);
+    if (wetAmt) { const s = ctx.createGain(); s.gain.value = wetAmt; g.connect(s); s.connect(verb); }
+    return g;
+  }
+  // Celesta / music-box bell: a few inharmonic sine partials with fast decay
+  function bell(freq, t, vol, dest, dur = 1.6) {
+    const o = out(dest, .6);
+    [[1, 1], [2, .35], [3.01, .12], [4.2, .06]].forEach(([m, a]) => {
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.frequency.value = freq * m; osc.connect(g); g.connect(o);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol * a, t + .005);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dur / m);
+      osc.start(t); osc.stop(t + dur + .05);
+    });
+  }
+  function tone(type, freq, t, dur, vol, dest, opts = {}) {
+    const osc = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t);
+    if (opts.to) osc.frequency.exponentialRampToValueAtTime(opts.to, t + dur);
+    f.type = "lowpass"; f.frequency.value = opts.cut || 3000;
+    osc.connect(f); f.connect(g); g.connect(out(dest, opts.wet ?? .3));
+    const a = opts.attack || .01;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + a);
+    g.gain.setValueAtTime(vol, t + Math.max(a, dur - (opts.release || .08)));
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur + (opts.tail || .05));
+    osc.start(t); osc.stop(t + dur + (opts.tail || .05) + .05);
+  }
+  function noise(t, dur, from, to, vol) {
+    const len = ctx.sampleRate * dur, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = buf; f.type = "bandpass"; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur * .4);
+    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(out(sfxBus, .4)); src.start(t);
+  }
+
+  // --- Background music: 8-bar loop, 3/4, six eighth notes per bar ---
+  const BAR = 2.3, CHORDS = [
+    [40, [64, 67, 71]], [36, [64, 67, 72]], [45, [64, 69, 72]], [47, [63, 66, 71]],
+    [40, [64, 67, 71]], [43, [62, 67, 71]], [36, [64, 67, 72]], [47, [63, 66, 69]]
+  ];
+  const MELODY = [[83, 79], [76, null], [81, 76], [78, 75], [79, 83], [86, 83], [84, 79], [78, null]];
+  function scheduleBar(t, i) {
+    const [bass, ch] = CHORDS[i % 8], step = BAR / 6;
+    // soft pad
+    ch.forEach(n => tone("triangle", mtof(n - 12), t, BAR * .95, .018, musicBus, { attack: .6, release: .6, cut: 900, wet: .5, tail: .4 }));
+    tone("sine", mtof(bass), t, BAR * .9, .07, musicBus, { attack: .05, release: .5, cut: 400, wet: .2, tail: .3 });
+    // celesta arpeggio
+    const arp = [ch[0], ch[1], ch[2], ch[0] + 12, ch[2], ch[1]];
+    arp.forEach((n, k) => bell(mtof(n + 12), t + k * step, k ? .028 : .04, musicBus, 1.2));
+    // sparse melody on beats 1 and 3 of the waltz
+    const [m1, m2] = MELODY[i % 8];
+    if (m1) bell(mtof(m1 + 12), t, .05, musicBus, 2.2);
+    if (m2) bell(mtof(m2 + 12), t + step * 4, .045, musicBus, 1.8);
+    if (Math.random() < .3) bell(mtof(ch[Math.floor(Math.random() * 3)] + 36), t + step * (1 + Math.floor(Math.random() * 4)) + .1, .015, musicBus, .8);
+  }
+  function pump() {
+    while (nextBar < ctx.currentTime + 1.2) { scheduleBar(nextBar, bar++); nextBar += BAR; }
+  }
+  function startMusic() {
+    if (!ctx || timer) return;
+    nextBar = ctx.currentTime + .15; bar = 0;
+    musicBus.gain.cancelScheduledValues(ctx.currentTime);
+    musicBus.gain.setTargetAtTime(duckLevel(), ctx.currentTime, .4);
+    pump(); timer = setInterval(pump, 250);
+  }
+  function stopMusic() {
+    if (!ctx) return;
+    musicBus.gain.setTargetAtTime(0, ctx.currentTime, .3);
+    clearInterval(timer); timer = 0;
+  }
+  let ducked = false;
+  function duckLevel() { return ducked ? .35 : 1; }
+  function duck(on) {
+    ducked = on;
+    if (ctx && timer) musicBus.gain.setTargetAtTime(duckLevel(), ctx.currentTime, .25);
+  }
+
+  // --- Effects ---
+  const now = () => ctx.currentTime + .01;
+  const ok = () => ctx && prefs.sfx;
+  const fx = {
+    open() { if (!ok()) return; const t = now(); noise(t, .55, 300, 5000, .25); [76, 83, 88].forEach((n, i) => bell(mtof(n + 12), t + .25 + i * .07, .09, sfxBus)); },
+    reveal() { if (!ok()) return; const t = now(); [64, 66, 67, 71, 74, 76, 79, 83, 86, 88].forEach((n, i) => tone("triangle", mtof(n), t + i * .035, .5, .08, sfxBus, { attack: .003, release: .45, cut: 4000, wet: .5, tail: .6 })); },
+    correct() { if (!ok()) return; const t = now(); [[71, 0, .14], [76, .14, .14], [80, .28, .14], [83, .42, .9]].forEach(([n, d, len]) => { tone("sawtooth", mtof(n - 12), t + d, len, .07, sfxBus, { cut: 2200, attack: .02, release: .1, wet: .35, tail: .3 }); tone("square", mtof(n), t + d, len, .03, sfxBus, { cut: 2600, attack: .02, wet: .35, tail: .3 }); }); [88, 92, 95].forEach((n, i) => bell(mtof(n + 12), t + .5 + i * .06, .06, sfxBus)); },
+    miss() { if (!ok()) return; const t = now(); tone("triangle", mtof(71), t, .35, .1, sfxBus, { to: mtof(67), cut: 1500, wet: .3 }); tone("triangle", mtof(67), t + .38, .6, .1, sfxBus, { to: mtof(62), cut: 1200, wet: .4, tail: .3 }); },
+    owl() { if (!ok()) return; const t = now() + .5; [0, .32, .5].forEach((d, i) => tone("sine", i === 2 ? 420 : 380, t + d, i === 2 ? .45 : .22, .14, sfxBus, { to: i === 2 ? 330 : 350, attack: .04, release: .12, cut: 1200, wet: .5 })); },
+    tick(last) { if (!ok()) return; tone("sine", last ? 1400 : 1000, now(), .05, .12, sfxBus, { cut: 5000, wet: .1, release: .03 }); },
+    gong() { if (!ok()) return; const t = now(); bell(110, t, .35, sfxBus, 4); bell(165, t, .12, sfxBus, 3); },
+    up() { if (!ok()) return; tone("sine", 660, now(), .12, .1, sfxBus, { to: 990, wet: .2 }); },
+    down() { if (!ok()) return; tone("sine", 600, now(), .14, .1, sfxBus, { to: 380, wet: .2 }); },
+    buzz() { if (!ok()) return; const t = now(); tone("square", 880, t, .12, .07, sfxBus, { cut: 3000, wet: .2 }); tone("square", 1320, t + .12, .25, .07, sfxBus, { cut: 3000, wet: .3 }); bell(mtof(96), t + .1, .08, sfxBus); },
+    pop() { if (!ok()) return; const t = now(); tone("sine", 500, t, .08, .12, sfxBus, { to: 1100, wet: .2 }); bell(mtof(88), t + .06, .05, sfxBus); },
+    close() { if (!ok()) return; noise(now(), .35, 3000, 400, .12); },
+    newGame() { if (!ok()) return; const t = now(); [64, 67, 71, 76, 79, 83].forEach((n, i) => bell(mtof(n + 12), t + i * .09, .07, sfxBus)); },
+    final() {
+      if (!ok()) return; const t = now();
+      [[64, 0, .2], [64, .2, .12], [64, .32, .12], [71, .44, .3], [69, .74, .2], [71, .94, .2], [76, 1.14, 1.6]].forEach(([n, d, len]) => {
+        tone("sawtooth", mtof(n - 12), t + d, len, .08, sfxBus, { cut: 2400, attack: .02, wet: .4, tail: .4 });
+        tone("square", mtof(n), t + d, len, .035, sfxBus, { cut: 3000, attack: .02, wet: .4, tail: .4 });
+      });
+      [52, 59, 64, 68].forEach(n => tone("triangle", mtof(n), t + 1.14, 1.6, .05, sfxBus, { cut: 1500, attack: .05, wet: .5, tail: .8 }));
+      for (let i = 0; i < 14; i++) bell(mtof(84 + [0, 3, 7, 12, 15][i % 5] + 12), t + 1.2 + i * .09, .04, sfxBus);
+    }
+  };
+
+  function unlock() {
+    if (!init()) return;
+    if (prefs.music && !IS_BUZZER) startMusic();
+  }
+  ["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, unlock, { capture: true }));
+
+  function savePrefs() { try { localStorage.setItem(PREF, JSON.stringify(prefs)); } catch (e) {} }
+  function setMusic(on) { prefs.music = on; savePrefs(); if (on) { init(); startMusic(); } else stopMusic(); }
+  function setSfx(on) { prefs.sfx = on; savePrefs(); if (init()) sfxBus.gain.value = on ? 1 : 0; }
+  return { fx, duck, setMusic, setSfx, prefs };
+})();
+
+function syncSoundButtons() {
+  const m = $("music"), s = $("sfx");
+  m.setAttribute("aria-pressed", Sound.prefs.music); m.textContent = "Музыка: " + (Sound.prefs.music ? "вкл" : "выкл");
+  s.setAttribute("aria-pressed", Sound.prefs.sfx); s.textContent = "Звуки: " + (Sound.prefs.sfx ? "вкл" : "выкл");
+}
+$("music").addEventListener("click", () => { Sound.setMusic(!Sound.prefs.music); syncSoundButtons(); });
+$("sfx").addEventListener("click", () => { Sound.setSfx(!Sound.prefs.sfx); syncSoundButtons(); if (Sound.prefs.sfx) Sound.fx.pop(); });
+syncSoundButtons();
+
+renderPlayers();
+renderBoard();
+</script>

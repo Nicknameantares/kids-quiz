@@ -2500,6 +2500,17 @@ h1 small { display: block; font-family: var(--body); font-size: .32em; color: va
 .final p { font: 800 clamp(18px, 2.2vw, 40px)/1.35 var(--body); margin: 0; max-width: 30ch; }
 canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; }
 
+/* Tournament */
+.scorebox { display: grid; justify-items: end; gap: 2px; }
+.total { font: 800 clamp(11px, .9vw, 15px)/1 var(--body); color: var(--muted); white-space: nowrap; }
+.standings-wrap { overflow-x: auto; max-width: 100%; }
+.standings { border-collapse: collapse; font: 800 clamp(16px, 1.7vw, 30px)/1.2 var(--body); font-variant-numeric: tabular-nums; margin-inline: auto; }
+.standings th { font-size: .55em; letter-spacing: .12em; text-transform: uppercase; color: #7a5a22; padding: .4em 1em; }
+.standings td { padding: .35em 1em; border-top: 2px dashed #c9b27c; text-align: right; }
+.standings td:first-child { text-align: left; display: flex; align-items: center; gap: .5em; }
+.standings td i { width: .7em; height: .7em; border-radius: 50%; background: var(--house); display: inline-block; }
+.standings td b { color: #7a1d2a; font-size: 1.2em; }
+
 /* Buzzer status on the question card */
 .buzz { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-radius: 12px; padding: .6em 1em; background: #e6d6ab; font-weight: 900; font-size: clamp(16px, 1.6vw, 28px); }
 .buzz span { font-size: .6em; letter-spacing: .12em; text-transform: uppercase; color: #7a5a22; }
@@ -2560,13 +2571,13 @@ canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; 
 <canvas id="stars" aria-hidden="true"></canvas>
 <div class="app">
   <header>
-    <h1>Своя игра: Хогвартс<small>Викторина по Гарри Поттеру</small></h1>
+    <h1>Своя игра: Хогвартс<small id="roundLabel">Викторина по Гарри Поттеру</small></h1>
     <div class="tools">
       <button class="btn sound" id="music" type="button" aria-pressed="true">Музыка: вкл</button>
       <button class="btn sound" id="sfx" type="button" aria-pressed="true">Звуки: вкл</button>
       <button class="btn" id="phonesBtn" type="button" hidden>Кнопки на телефонах</button>
       <button class="btn" id="fs" type="button">На весь экран</button>
-      <button class="btn" id="reset" type="button">Новая игра</button>
+      <button class="btn" id="reset" type="button">Новый турнир</button>
       <button class="btn solid" id="finish" type="button">Итоги и призы</button>
     </div>
   </header>
@@ -2589,45 +2600,90 @@ canvas#confetti { position: fixed; inset: 0; z-index: 11; pointer-events: none; 
 <main class="phone" id="phone" hidden aria-live="polite"></main>
 
 <script>
-const PRICES = [100, 200, 300, 400, 500];
-const QSET = "hp-2";
-const QUIZ = [
-  { title: "Тайны Хогвартса", qs: [
-    ["Как зовут кошку завхоза Филча?", "Миссис Норрис"],
-    ["Какой предмет вёл профессор Снегг в первых книгах?", "Зельеварение"],
-    ["Как называется волшебная деревня рядом с Хогвартсом, куда ходят старшекурсники?", "Хогсмид"],
-    ["Какое дерево в Хогвартсе колотит ветками всех, кто подойдёт близко?", "Гремучая ива"],
-    ["Кто охраняет вход в гостиную Гриффиндора и что ей нужно сказать?", "Портрет Полной Дамы, ей нужно назвать пароль"]
+// A tournament is a list of rounds played by the same players; round 2 doubles the prices.
+const BASE_PRICES = [100, 200, 300, 400, 500];
+const ROUNDS = [
+  { id: "hp-2", title: "Раунд 1", mult: 1, cats: [
+    { title: "Тайны Хогвартса", qs: [
+      ["Как зовут кошку завхоза Филча?", "Миссис Норрис"],
+      ["Какой предмет вёл профессор Снегг в первых книгах?", "Зельеварение"],
+      ["Как называется волшебная деревня рядом с Хогвартсом, куда ходят старшекурсники?", "Хогсмид"],
+      ["Какое дерево в Хогвартсе колотит ветками всех, кто подойдёт близко?", "Гремучая ива"],
+      ["Кто охраняет вход в гостиную Гриффиндора и что ей нужно сказать?", "Портрет Полной Дамы, ей нужно назвать пароль"]
+    ]},
+    { title: "Уроки и зелья", qs: [
+      ["Чему учит первокурсников мадам Трюк?", "Летать на метле"],
+      ["Как называется предмет про волшебные растения, который ведёт профессор Стебль?", "Травология"],
+      ["Как называется зелье, которое на час превращает тебя в другого человека?", "Оборотное зелье"],
+      ["Что такое безоар и от чего он спасает?", "Камень из желудка козы, он спасает от большинства ядов"],
+      ["Как называется золотистое зелье удачи?", "Феликс Фелицис, или «жидкая удача»"]
+    ]},
+    { title: "Семья Уизли", qs: [
+      ["Какого цвета волосы у всех Уизли?", "Рыжие"],
+      ["Как зовут единственную сестру Рона?", "Джинни"],
+      ["Как зовут братьев-близнецов, которые открыли магазин волшебных приколов?", "Фред и Джордж"],
+      ["Как называется дом семьи Уизли?", "Нора"],
+      ["Как звали крысу Рона и кем она оказалась на самом деле?", "Короста, а на самом деле это Питер Петтигрю"]
+    ]},
+    { title: "Волшебный мир", qs: [
+      ["Как называют людей без волшебных способностей?", "Маглы"],
+      ["Как называется банк волшебников, где работают гоблины?", "Гринготтс"],
+      ["На какой улице Лондона волшебники покупают палочки, мантии и учебники?", "Косой переулок"],
+      ["Как зовут мастера, который продал Гарри волшебную палочку?", "Олливандер"],
+      ["Что спрятано внутри палочки Гарри?", "Перо феникса Фоукса"]
+    ]},
+    { title: "Злодеи и загадки", qs: [
+      ["Как зовут злого волшебника, чьё имя боятся произносить?", "Волан-де-Морт"],
+      ["Как зовут светловолосого соперника Гарри со Слизерина?", "Драко Малфой"],
+      ["Какой профессор прятал Волан-де-Морта у себя под тюрбаном?", "Профессор Квиррелл"],
+      ["Чей старый дневник попал к Джинни и открыл Тайную комнату?", "Дневник Тома Реддла"],
+      ["Какое чудовище жило в Тайной комнате?", "Василиск, огромный змей"]
+    ]}
   ]},
-  { title: "Уроки и зелья", qs: [
-    ["Чему учит первокурсников мадам Трюк?", "Летать на метле"],
-    ["Как называется предмет про волшебные растения, который ведёт профессор Стебль?", "Травология"],
-    ["Как называется зелье, которое на час превращает тебя в другого человека?", "Оборотное зелье"],
-    ["Что такое безоар и от чего он спасает?", "Камень из желудка козы, он спасает от большинства ядов"],
-    ["Как называется золотистое зелье удачи?", "Феликс Фелицис, или «жидкая удача»"]
-  ]},
-  { title: "Семья Уизли", qs: [
-    ["Какого цвета волосы у всех Уизли?", "Рыжие"],
-    ["Как зовут единственную сестру Рона?", "Джинни"],
-    ["Как зовут братьев-близнецов, которые открыли магазин волшебных приколов?", "Фред и Джордж"],
-    ["Как называется дом семьи Уизли?", "Нора"],
-    ["Как звали крысу Рона и кем она оказалась на самом деле?", "Короста, а на самом деле это Питер Петтигрю"]
-  ]},
-  { title: "Волшебный мир", qs: [
-    ["Как называют людей без волшебных способностей?", "Маглы"],
-    ["Как называется банк волшебников, где работают гоблины?", "Гринготтс"],
-    ["На какой улице Лондона волшебники покупают палочки, мантии и учебники?", "Косой переулок"],
-    ["Как зовут мастера, который продал Гарри волшебную палочку?", "Олливандер"],
-    ["Что спрятано внутри палочки Гарри?", "Перо феникса Фоукса"]
-  ]},
-  { title: "Злодеи и загадки", qs: [
-    ["Как зовут злого волшебника, чьё имя боятся произносить?", "Волан-де-Морт"],
-    ["Как зовут светловолосого соперника Гарри со Слизерина?", "Драко Малфой"],
-    ["Какой профессор прятал Волан-де-Морта у себя под тюрбаном?", "Профессор Квиррелл"],
-    ["Чей старый дневник попал к Джинни и открыл Тайную комнату?", "Дневник Тома Реддла"],
-    ["Какое чудовище жило в Тайной комнате?", "Василиск, огромный змей"]
+  { id: "hp-r2", title: "Раунд 2", mult: 2, cats: [
+    { title: "Квиддич", qs: [
+      ["Сколько игроков в одной команде по квиддичу?", "Семь"],
+      ["Как называется красный мяч, который забрасывают в кольца?", "Квоффл"],
+      ["Какие мячи сами летают и пытаются сбить игроков с мётел?", "Бладжеры"],
+      ["Сколько очков получает команда, чей ловец поймал снитч?", "150 очков"],
+      ["Как называлась метла, которую Гарри подарили на первом курсе?", "«Нимбус-2000»"]
+    ]},
+    { title: "Звери и питомцы", qs: [
+      ["Какого питомца взял с собой в Хогвартс Невилл Долгопупс?", "Жабу Тревора"],
+      ["Какая птица живёт у Дамблдора и чем полезны её слёзы?", "Феникс Фоукс, его слёзы лечат раны"],
+      ["Как звали дракончика, которого Хагрид вырастил из яйца?", "Норберт"],
+      ["Как зовут огромного говорящего паука, старого друга Хагрида?", "Арагог"],
+      ["Какой пушистый зверёк с длинным носом тащит всё блестящее?", "Нюхлер"]
+    ]},
+    { title: "Профессора", qs: [
+      ["Кто ведёт трансфигурацию и умеет превращаться в кошку?", "Профессор Макгонагалл"],
+      ["Какой крошечный профессор учит заклинаниям и стоит на стопке книг?", "Профессор Флитвик"],
+      ["Какой добрый профессор защиты от тёмных искусств оказался оборотнем?", "Римус Люпин"],
+      ["У какого профессора был волшебный вращающийся глаз?", "Грозный Глаз Грюм"],
+      ["Какой профессор хвастался чужими подвигами и в итоге потерял память?", "Златопуст Локонс"]
+    ]},
+    { title: "Всё о Гарри", qs: [
+      ["Где спал Гарри в доме Дурслей до Хогвартса?", "В чулане под лестницей"],
+      ["Как зовут толстого двоюродного брата Гарри?", "Дадли"],
+      ["Когда у Гарри день рождения?", "31 июля"],
+      ["Как звали маму и папу Гарри?", "Лили и Джеймс Поттеры"],
+      ["С какими животными Гарри умеет разговаривать и как называют таких волшебников?", "Со змеями, таких волшебников называют змееустами"]
+    ]},
+    { title: "Волшебные предметы", qs: [
+      ["Как называется письмо, которое кричит голосом отправителя?", "Громовещатель"],
+      ["Какая карта показывает, где находится каждый человек в Хогвартсе?", "Карта Мародёров"],
+      ["Какой предмет помогал Гермионе успевать на два урока одновременно?", "Маховик времени"],
+      ["Что делает Кубок огня в четвёртой книге?", "Выбирает участников Турнира трёх волшебников"],
+      ["Как называется каменная чаша, в которой можно смотреть чужие воспоминания?", "Омут памяти"]
+    ]}
   ]}
+
 ];
+let QUIZ = ROUNDS[0].cats, PRICES = BASE_PRICES;
+function applyRound() {
+  const R = ROUNDS[S.round] || ROUNDS[0];
+  QUIZ = R.cats; PRICES = BASE_PRICES.map(p => p * R.mult);
+}
 
 const KEY = "hp-svoya-igra-v1";
 const IS_BUZZER = /^#buzz-/.test(location.hash);
@@ -2636,17 +2692,29 @@ let S = load();
 const HOUSES = ["#b3263a", "#2f6fd1", "#2f8a4f", "#c98a12", "#7a4fc2", "#1c8c93", "#c2457f", "#8a6a3a"];
 const MAX_PLAYERS = 8;
 
+function randomDouble() { return Math.floor(Math.random() * 5) + "-" + (1 + Math.floor(Math.random() * 4)); }
+// A new tournament keeps the names; `past` holds each player's score in the finished rounds
 function fresh() {
-  const c = Math.floor(Math.random() * 5), r = 1 + Math.floor(Math.random() * 4);
-  const players = S ? S.players.map(p => ({ name: p.name, score: 0 })) : [{ name: "Игрок 1", score: 0 }, { name: "Игрок 2", score: 0 }];
-  return { players, used: {}, dbl: c + "-" + r, qset: QSET };
+  const players = S ? S.players.map(p => ({ name: p.name, score: 0, past: [] })) : [{ name: "Игрок 1", score: 0, past: [] }, { name: "Игрок 2", score: 0, past: [] }];
+  return { players, used: {}, dbl: randomDouble(), round: 0 };
 }
+function nextRound() {
+  S.players.forEach(p => { p.past = (p.past || []).slice(0, S.round); while (p.past.length < S.round) p.past.push(0); p.past.push(p.score); p.score = 0; });
+  S.round++; S.used = {}; S.dbl = randomDouble();
+  save(); applyRound(); renderAll();
+}
+function total(p) { return (p.past || []).reduce((a, b) => a + b, 0) + p.score; }
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
     if (s && s.players) {
-      // A new question set starts a clean board but keeps the players
-      if (s.qset !== QSET) { s.players.forEach(p => { p.score = 0; }); s.used = {}; s.qset = QSET; s.dbl = Math.floor(Math.random() * 5) + "-" + (1 + Math.floor(Math.random() * 4)); }
+      // Saves from before tournaments: a board of the old "hp-2" set becomes round 1, anything older starts clean
+      if (!Number.isInteger(s.round)) {
+        if (s.qset !== "hp-2") { s.players.forEach(p => { p.score = 0; }); s.used = {}; s.dbl = randomDouble(); }
+        s.round = 0; delete s.qset;
+      }
+      if (s.round >= ROUNDS.length) s.round = ROUNDS.length - 1;
+      s.players.forEach(p => { if (!Array.isArray(p.past)) p.past = []; });
       return s;
     }
     if (s && s.scores) return { players: s.names.map((n, i) => ({ name: n, score: s.scores[i] })), used: s.used, dbl: s.dbl };
@@ -2655,6 +2723,7 @@ function load() {
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 if (!S) S = fresh();
+applyRound();
 
 const $ = id => document.getElementById(id);
 const board = $("board"), overlay = $("overlay"), card = $("card");
@@ -2692,7 +2761,7 @@ function renderPlayers() {
     d.innerHTML =
       '<div class="crest" aria-hidden="true">' + esc(initial(i)) + '</div>' +
       '<input id="name' + i + '" aria-label="Имя игрока ' + (i + 1) + '" maxlength="18" placeholder="Имя">' +
-      '<div class="score" id="score' + i + '">' + p.score + '</div>' +
+      '<div class="scorebox"><div class="score" id="score' + i + '">' + p.score + '</div><div class="total" id="total' + i + '"></div></div>' +
       '<div class="adj"><button type="button" data-v="100" aria-label="Добавить 100">+100</button><button type="button" data-v="-100" aria-label="Отнять 100">−100</button></div>' +
       (S.players.length > 1 ? '<button class="remove" type="button" aria-label="Убрать игрока">✕</button>' : '');
     const inp = d.querySelector("input");
@@ -2712,7 +2781,12 @@ function renderPlayers() {
   renderScores(); hostPublish(); renderLinked();
 }
 function renderScores() {
-  S.players.forEach((p, i) => { const el = $("score" + i); if (el) el.textContent = p.score; });
+  S.players.forEach((p, i) => {
+    const el = $("score" + i), t = $("total" + i);
+    if (el) el.textContent = p.score;
+    if (t) { t.hidden = S.round === 0; t.textContent = "в турнире " + total(p); }
+  });
+  $("roundLabel").textContent = ROUNDS[S.round].title + " из " + ROUNDS.length + (ROUNDS[S.round].mult > 1 ? " · очки ×" + ROUNDS[S.round].mult : "") + " · Викторина по Гарри Поттеру";
   $("left").textContent = 25 - Object.keys(S.used).length;
 }
 function esc(t) { return t.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
@@ -2781,32 +2855,59 @@ function close() {
   if (lastTile && !lastTile.disabled) lastTile.focus();
 }
 
-function showFinal() {
-  const top = Math.max(...S.players.map(p => p.score));
-  const leaders = S.players.map((p, i) => i).filter(i => S.players[i].score === top);
-  const head = S.players.length === 1 ? "Отличная игра, " + name(0) + "!" :
+function leaderText(vals, cup) {
+  const top = Math.max(...vals);
+  const leaders = vals.map((v, i) => i).filter(i => vals[i] === top);
+  return S.players.length === 1 ? "Отличная игра, " + name(0) + "!" :
     leaders.length === S.players.length ? "Ничья! Все настоящие волшебники" :
-    leaders.length > 1 ? "Кубок школы делят " + leaders.map(name).join(" и ") + "!" :
-    "Кубок школы у игрока " + name(leaders[0]) + "!";
+    leaders.length > 1 ? cup + " делят " + leaders.map(name).join(" и ") + "!" :
+    cup + " у игрока " + name(leaders[0]) + "!";
+}
+function roundLeader() {
+  const vals = S.players.map(p => p.score), top = Math.max(...vals);
+  const leaders = vals.map((v, i) => i).filter(i => vals[i] === top);
+  return S.players.length === 1 ? "" : leaders.length === S.players.length ? "Пока ничья" :
+    leaders.length > 1 ? "Лучшие: " + leaders.map(name).join(" и ") : "Лучший: " + name(leaders[0]);
+}
+function standings() {
+  const cols = ROUNDS.slice(0, S.round + 1);
+  return '<div class="standings-wrap"><table class="standings"><thead><tr><th>Игрок</th>' +
+    cols.map(R => '<th>' + esc(R.title) + '</th>').join("") + '<th>Всего</th></tr></thead><tbody>' +
+    S.players.map((p, i) => '<tr><td><i style="--house:' + house(i) + '"></i>' + esc(name(i)) + '</td>' +
+      cols.map((R, r) => '<td>' + (r < S.round ? ((p.past || [])[r] || 0) : p.score) + '</td>').join("") +
+      '<td><b>' + total(p) + '</b></td></tr>').join("") +
+    '</tbody></table></div>';
+}
+function showFinal() {
+  const last = S.round >= ROUNDS.length - 1;
+  const head = last
+    ? (ROUNDS.length > 1 ? leaderText(S.players.map(total), "Кубок турнира") : leaderText(S.players.map(p => p.score), "Кубок школы"))
+    : ROUNDS[S.round].title + " окончен! " + roundLeader();
   card.className = "card final";
   card.innerHTML =
     '<h2 id="qtext">' + esc(head) + '</h2>' +
-    '<div class="tally">' + S.players.map((p, i) => '<div>' + esc(name(i)) + '<b>' + p.score + '</b></div>').join("") + '</div>' +
-    '<p>Призы получают ' + (S.players.length === 2 ? "оба" : "все") + '! Спасибо за игру, юные маги.</p>' +
-    '<div class="actions"><button class="btn solid" type="button" id="again">Сыграть заново</button><button class="btn" type="button" id="back">Вернуться к табло</button></div>';
+    standings() +
+    (last ? '<p>Призы получают ' + (S.players.length === 2 ? "оба" : "все") + '! Спасибо за игру, юные маги.</p>'
+          : '<p>Очки сохранятся. Дальше ' + esc(ROUNDS[S.round + 1].title.toLowerCase()) + (ROUNDS[S.round + 1].mult > 1 ? ', вопросы стоят в ' + ROUNDS[S.round + 1].mult + ' раза дороже' : '') + '.</p>') +
+    '<div class="actions">' +
+      (last ? '<button class="btn solid" type="button" id="again">Новый турнир</button>'
+            : '<button class="btn solid" type="button" id="nextr">Начать ' + esc(ROUNDS[S.round + 1].title.toLowerCase()) + '</button>') +
+      '<button class="btn" type="button" id="back">Вернуться к табло</button></div>';
   overlay.hidden = false; Sound.duck(true); Sound.fx.final();
-  $("again").addEventListener("click", () => { newGame(); close(); Sound.fx.newGame(); });
+  if ($("again")) $("again").addEventListener("click", () => { newGame(); close(); Sound.fx.newGame(); });
+  if ($("nextr")) $("nextr").addEventListener("click", () => { nextRound(); close(); Sound.fx.newGame(); });
   $("back").addEventListener("click", close);
   confetti();
 }
-function newGame() { S = fresh(); save(); renderPlayers(); renderBoard(); }
+function newGame() { S = fresh(); save(); applyRound(); renderAll(); }
+function renderAll() { renderPlayers(); renderBoard(); }
 
 // Two-step reset so a stray click does not wipe the game
 const resetBtn = $("reset"); let armed = 0;
 resetBtn.addEventListener("click", () => {
-  if (Date.now() - armed < 3000) { newGame(); Sound.fx.newGame(); resetBtn.textContent = "Новая игра"; armed = 0; return; }
+  if (Date.now() - armed < 3000) { newGame(); Sound.fx.newGame(); resetBtn.textContent = "Новый турнир"; armed = 0; return; }
   armed = Date.now(); resetBtn.textContent = "Точно? Нажмите ещё раз";
-  setTimeout(() => { if (armed && Date.now() - armed >= 3000) { resetBtn.textContent = "Новая игра"; armed = 0; } }, 3100);
+  setTimeout(() => { if (armed && Date.now() - armed >= 3000) { resetBtn.textContent = "Новый турнир"; armed = 0; } }, 3100);
 });
 $("finish").addEventListener("click", showFinal);
 $("phonesBtn").addEventListener("click", openPhones);
@@ -2820,7 +2921,7 @@ $("fs").addEventListener("click", () => {
 document.addEventListener("fullscreenchange", () => { $("fs").textContent = document.fullscreenElement ? "Выйти из полного экрана" : "На весь экран"; });
 $("addp").addEventListener("click", () => {
   if (S.players.length >= MAX_PLAYERS) return;
-  S.players.push({ name: "", score: 0 }); save(); renderPlayers(); Sound.fx.pop();
+  S.players.push({ name: "", score: 0, past: [] }); save(); renderPlayers(); Sound.fx.pop();
   const inp = $("name" + (S.players.length - 1)); if (inp) inp.focus();
 });
 
